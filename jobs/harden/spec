@@ -1,0 +1,8 @@
+---
+name: harden
+templates:
+  bin/run: bin/run
+packages:
+- harden
+properties:
+  foo: bar

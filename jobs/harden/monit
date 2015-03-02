@@ -1,0 +1,2 @@
+check file hardened with path /tmp/hardened
+  if not exist then exec "/bin/bash -c '/var/vcap/packages/harden/bin/start.sh > /tmp/hardened'"

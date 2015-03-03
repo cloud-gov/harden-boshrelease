@@ -1,7 +1,6 @@
 ---
 name: harden
-templates:
-  bin/run: bin/run
+templates: {}
 packages:
 - harden
 properties:

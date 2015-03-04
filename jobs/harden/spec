@@ -1,6 +1,7 @@
 ---
 name: harden
-templates: {}
+templates:
+  .placeholder: .placeholder
 packages:
 - harden
 properties:

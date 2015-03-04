@@ -2,4 +2,4 @@ blobstore:
   provider: local
   options:
     blobstore_path: /tmp/fisma-blobs
-final_name: fisma_blobstore
+final_name: fisma

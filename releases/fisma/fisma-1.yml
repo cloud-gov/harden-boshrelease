@@ -1,0 +1,16 @@
+---
+packages:
+- name: harden
+  version: 7f3ddc156f5adc0cb3b013b04c92dc1dce5c7195
+  fingerprint: 7f3ddc156f5adc0cb3b013b04c92dc1dce5c7195
+  sha1: dc325431f9028be6978fd8ab587c6db63e403270
+  dependencies: []
+jobs:
+- name: harden
+  version: a474b662fe42cd360a3bc1ad9c9aa4624a12f347
+  fingerprint: a474b662fe42cd360a3bc1ad9c9aa4624a12f347
+  sha1: 9b45c0d98fa3e9bdb669b97301300beb8f106f0e
+commit_hash: bb72011b
+uncommitted_changes: true
+name: fisma
+version: '1'

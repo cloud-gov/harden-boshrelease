@@ -3,4 +3,5 @@ builds:
   cbc3b15f61fec179f7d9f8f7eba00eb91ba15b59:
     version: cbc3b15f61fec179f7d9f8f7eba00eb91ba15b59
     sha1: 37c7419a7f734428f7bb7f63012d01b31f6a4630
+    blobstore_id: 68dda068-e0f6-455e-b73c-1f30e85371d8
 format-version: '2'

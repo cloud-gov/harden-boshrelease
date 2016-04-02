@@ -120,5 +120,10 @@ for file in "${ISSUE_FILES[@]}"; do
   chown root:root $file
 done
 
+###
+# Restrict Core Dumps
+###
+
+cp etc/security/limits.conf /etc/security/limits.conf
 
 echo "---> Finished hardening process"

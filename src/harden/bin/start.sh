@@ -103,5 +103,22 @@ chmod 0644 /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs
 cp etc/ssh/sshd_config /etc/ssh/sshd_config
 chmod 0600 /etc/ssh/sshd_config
 
+###
+# Set warning banner for login services
+###
+
+cp etc/issue /etc/issue
+cp etc/issue /etc/issue.net
+touch /etc/motd
+
+ISSUE_FILES[0]="/etc/issue"
+ISSUE_FILES[1]="/etc/issue.net"
+ISSUE_FILES[2]="/etc/motd"
+
+for file in "${ISSUE_FILES[@]}"; do
+  chmod 0644 $file
+  chown root:root $file
+done
+
 
 echo "---> Finished hardening process"

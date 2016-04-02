@@ -130,4 +130,11 @@ done
 
 cp etc/security/limits.conf /etc/security/limits.conf
 
+###
+# Change permissions on home directory
+###
+
+chmod 0750 /home/vcap
+
+
 echo "---> Finished hardening process"

@@ -42,8 +42,9 @@ ICMP_SETTINGS[14]="net.ipv4.conf.all.log_martians=1"
 ICMP_SETTINGS[15]="net.ipv4.conf.default.log_martians=1"
 ICMP_SETTINGS[16]="net.ipv4.ip_forward=0"
 ICMP_SETTINGS[17]="net.ipv4.icmp_echo_ignore_broadcasts=1"
-ICMP_SETTINGS[18]="net.ipv4.route.flush=1"
-ICMP_SETTINGS[19]="net.ipv6.route.flush=1"
+ICMP_SETTINGS[18]="net.ipv4.icmp_ignore_bogus_error_responses=1"
+ICMP_SETTINGS[19]="net.ipv4.route.flush=1"
+ICMP_SETTINGS[20]="net.ipv6.route.flush=1"
 
 for setting in "${ICMP_SETTINGS[@]}"; do
   /sbin/sysctl -w $setting

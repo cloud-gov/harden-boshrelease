@@ -40,8 +40,12 @@ ICMP_SETTINGS[12]="net.ipv4.conf.default.accept_source_route=0"
 ICMP_SETTINGS[13]="net.ipv6.conf.default.accept_source_route=0"
 ICMP_SETTINGS[14]="net.ipv4.conf.all.log_martians=1"
 ICMP_SETTINGS[15]="net.ipv4.conf.default.log_martians=1"
-ICMP_SETTINGS[16]="net.ipv4.route.flush=1"
-ICMP_SETTINGS[17]="net.ipv6.route.flush=1"
+ICMP_SETTINGS[16]="net.ipv4.ip_forward=0"
+ICMP_SETTINGS[17]="net.ipv4.icmp_echo_ignore_broadcasts=1"
+ICMP_SETTINGS[18]="net.ipv4.icmp_ignore_bogus_error_responses=1"
+ICMP_SETTINGS[19]="net.ipv4.tcp_syncookies=1"
+ICMP_SETTINGS[20]="net.ipv4.route.flush=1"
+ICMP_SETTINGS[21]="net.ipv6.route.flush=1"
 
 for setting in "${ICMP_SETTINGS[@]}"; do
   /sbin/sysctl -w $setting
@@ -102,6 +106,35 @@ chmod 0644 /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs
 
 cp etc/ssh/sshd_config /etc/ssh/sshd_config
 chmod 0600 /etc/ssh/sshd_config
+
+###
+# Set warning banner for login services
+###
+
+cp etc/issue /etc/issue
+cp etc/issue /etc/issue.net
+touch /etc/motd
+
+ISSUE_FILES[0]="/etc/issue"
+ISSUE_FILES[1]="/etc/issue.net"
+ISSUE_FILES[2]="/etc/motd"
+
+for file in "${ISSUE_FILES[@]}"; do
+  chmod 0644 $file
+  chown root:root $file
+done
+
+###
+# Restrict Core Dumps
+###
+
+cp etc/security/limits.conf /etc/security/limits.conf
+
+###
+# Change permissions on home directory
+###
+
+chmod 0750 /home/vcap
 
 
 echo "---> Finished hardening process"

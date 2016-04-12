@@ -1,0 +1,57 @@
+jobs:
+- name: fisma-boshrelease
+  plan:
+  - aggregate:
+    - get: release-git-repo
+      trigger: true
+    - get: pipeline-tasks
+    - get: final-builds-dir-tarball
+    - get: releases-dir-tarball
+  - task: finalize-release
+    file: pipeline-tasks/finalize-bosh-release.yml
+    config:
+      params:
+        PRIVATE_YML_CONTENT: {{private-yml}}
+  - aggregate:
+    - put: release-tarball
+      params:
+        file: finalized-release/fisma-*.tgz
+    - put: final-builds-dir-tarball
+      params:
+        file: finalized-release/final-builds-dir-fisma.tgz
+    - put: releases-dir-tarball
+      params:
+        file: finalized-release/releases-dir-fisma.tgz
+
+resources:
+- name: release-git-repo
+  type: git
+  source:
+    uri: {{release-git-url}}
+    branch: {{release-git-branch}}
+- name: pipeline-tasks
+  type: git
+  source:
+    uri: {{pipeline-tasks-git-url}}
+    branch: {{pipeline-tasks-git-branch}}
+- name: release-tarball
+  type: s3
+  source:
+    bucket: {{s3-bosh-releases-bucket}}
+    regexp: fisma-(.*).tgz
+    access_key_id: {{s3-bosh-releases-access-key-id}}
+    secret_access_key: {{s3-bosh-releases-secret-access-key}}
+- name: final-builds-dir-tarball
+  type: s3
+  source:
+    bucket: {{s3-bosh-releases-bucket}}
+    versioned_file: final-builds-dir-fisma.tgz
+    access_key_id: {{s3-bosh-releases-access-key-id}}
+    secret_access_key: {{s3-bosh-releases-secret-access-key}}
+- name: releases-dir-tarball
+  type: s3
+  source:
+    bucket: {{s3-bosh-releases-bucket}}
+    versioned_file: releases-dir-fisma.tgz
+    access_key_id: {{s3-bosh-releases-access-key-id}}
+    secret_access_key: {{s3-bosh-releases-secret-access-key}}

@@ -1,0 +1,20 @@
+---
+packages:
+- name: harden
+  version: e9fb1d9e80bc6d3bdc319b23d03db620b3b46f7c
+  fingerprint: e9fb1d9e80bc6d3bdc319b23d03db620b3b46f7c
+  sha1: 5d5ffb0e35c58473654a0241bc7116da77b637b4
+  dependencies: []
+jobs:
+- name: harden
+  version: a474b662fe42cd360a3bc1ad9c9aa4624a12f347
+  fingerprint: a474b662fe42cd360a3bc1ad9c9aa4624a12f347
+  sha1: 9b45c0d98fa3e9bdb669b97301300beb8f106f0e
+license:
+  version: cbc3b15f61fec179f7d9f8f7eba00eb91ba15b59
+  fingerprint: cbc3b15f61fec179f7d9f8f7eba00eb91ba15b59
+  sha1: 37c7419a7f734428f7bb7f63012d01b31f6a4630
+commit_hash: 907553e5
+uncommitted_changes: true
+name: fisma
+version: '2'

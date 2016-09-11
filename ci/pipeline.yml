@@ -42,6 +42,7 @@ resources:
     access_key_id: {{s3-bosh-releases-access-key-id}}
     secret_access_key: {{s3-bosh-releases-secret-access-key}}
     region_name: {{s3-bosh-releases-region}}
+    server_side_encrytion: AES256
 - name: final-builds-dir-tarball
   type: s3
   source:
@@ -50,6 +51,7 @@ resources:
     access_key_id: {{s3-bosh-releases-access-key-id}}
     secret_access_key: {{s3-bosh-releases-secret-access-key}}
     region_name: {{s3-bosh-releases-region}}
+    server_side_encrytion: AES256
 - name: releases-dir-tarball
   type: s3
   source:
@@ -58,3 +60,4 @@ resources:
     access_key_id: {{s3-bosh-releases-access-key-id}}
     secret_access_key: {{s3-bosh-releases-secret-access-key}}
     region_name: {{s3-bosh-releases-region}}
+    server_side_encrytion: AES256

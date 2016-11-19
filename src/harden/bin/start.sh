@@ -135,5 +135,21 @@ cp etc/security/limits.conf /etc/security/limits.conf
 
 chmod 0750 /home/vcap
 
+###
+# Ensure syslog emits at least one entry each minute
+###
+sed -i 's/^#\($ModLoad immark\)/\1/' /etc/rsyslog.conf
+sed -i 's/^\($ModLoad imuxsock\)/#\1/' /etc/rsyslog.conf
+sed -i 's/^\($RepeatedMsgReduction on\)/#\1/' /etc/rsyslog.conf
+
+cat << 'EOF' > /etc/rsyslog.d/00-heartbeat.conf
+$MarkMessagePeriod 60
+$ActionWriteAllMarkmessages on
+
+module(load="imuxsock" SysSock.IgnoreOwnMessages="off" SysSock.RateLimit.Interval="0")
+EOF
+
+service rsyslog restart
+
 
 echo "---> Finished hardening process"

@@ -4,5 +4,4 @@ templates:
   .placeholder: .placeholder
 packages:
 - harden
-properties:
-  foo: bar
+properties: {}

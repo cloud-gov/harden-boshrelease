@@ -149,6 +149,14 @@ $ActionWriteAllMarkmessages on
 module(load="imuxsock" SysSock.IgnoreOwnMessages="off" SysSock.RateLimit.Interval="0")
 EOF
 
+# write iptables connection logs to their own log file
+cat << 'EOF' > /etc/rsyslog.d/01-tcp_connections.conf
+if $syslogfacility-text == 'kern' and $msg contains 'IN=' and $msg contains 'OUT='  and $msg contains 'MAC=' then {
+    /var/log/tcp_connections.log
+    stop
+}
+EOF
+
 service rsyslog restart
 
 

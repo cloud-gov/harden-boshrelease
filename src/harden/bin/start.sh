@@ -23,38 +23,49 @@ cp etc/sysctl.conf /etc/sysctl.conf
 chmod 0644 /etc/sysctl.conf
 chown root:root /etc/sysctl.conf
 
-ICMP_V4_SETTINGS[0]="net.ipv4.conf.default.rp_filter=1"
-ICMP_V4_SETTINGS[1]="net.ipv4.conf.all.rp_filter=1"
-ICMP_V4_SETTINGS[2]="net.ipv4.conf.all.accept_redirects=0"
-ICMP_V4_SETTINGS[3]="net.ipv4.conf.default.accept_redirects=0"
-ICMP_V4_SETTINGS[4]="net.ipv4.conf.all.secure_redirects=0"
-ICMP_V4_SETTINGS[5]="net.ipv4.conf.default.secure_redirects=0"
-ICMP_V4_SETTINGS[6]="net.ipv4.conf.all.send_redirects=0"
-ICMP_V4_SETTINGS[7]="net.ipv4.conf.default.send_redirects=0"
-ICMP_V4_SETTINGS[8]="net.ipv4.conf.all.accept_source_route=0"
-ICMP_V4_SETTINGS[9]="net.ipv4.conf.default.accept_source_route=0"
-ICMP_V4_SETTINGS[10]="net.ipv4.conf.all.log_martians=1"
-ICMP_V4_SETTINGS[11]="net.ipv4.conf.default.log_martians=1"
-ICMP_V4_SETTINGS[12]="net.ipv4.icmp_echo_ignore_broadcasts=1"
-ICMP_V4_SETTINGS[13]="net.ipv4.icmp_ignore_bogus_error_responses=1"
-ICMP_V4_SETTINGS[14]="net.ipv4.tcp_syncookies=1"
-ICMP_V4_SETTINGS[15]="net.ipv4.route.flush=1"
+IPV4_SETTINGS[0]="net.ipv4.conf.default.rp_filter=1"
+IPV4_SETTINGS[1]="net.ipv4.conf.all.rp_filter=1"
+IPV4_SETTINGS[2]="net.ipv4.conf.all.accept_redirects=0"
+IPV4_SETTINGS[3]="net.ipv4.conf.default.accept_redirects=0"
+IPV4_SETTINGS[4]="net.ipv4.conf.all.secure_redirects=0"
+IPV4_SETTINGS[5]="net.ipv4.conf.default.secure_redirects=0"
+IPV4_SETTINGS[6]="net.ipv4.conf.all.send_redirects=0"
+IPV4_SETTINGS[7]="net.ipv4.conf.default.send_redirects=0"
+IPV4_SETTINGS[8]="net.ipv4.conf.all.accept_source_route=0"
+IPV4_SETTINGS[9]="net.ipv4.conf.default.accept_source_route=0"
+IPV4_SETTINGS[10]="net.ipv4.conf.all.log_martians=1"
+IPV4_SETTINGS[11]="net.ipv4.conf.default.log_martians=1"
+IPV4_SETTINGS[12]="net.ipv4.icmp_echo_ignore_broadcasts=1"
+IPV4_SETTINGS[13]="net.ipv4.icmp_ignore_bogus_error_responses=1"
+IPV4_SETTINGS[14]="net.ipv4.tcp_syncookies=1"
+IPV4_SETTINGS[15]="net.ipv4.route.flush=1"
+IPV4_SETTINGS[16]="net.ipv4.ip_forward=0"
 
-ICMP_V6_SETTINGS[0]="net.ipv6.conf.all.accept_redirects=0"
-ICMP_V6_SETTINGS[1]="net.ipv6.conf.all.accept_source_route=0"
-ICMP_V6_SETTINGS[2]="net.ipv6.conf.default.accept_source_route=0"
-ICMP_V6_SETTINGS[3]="net.ipv6.route.flush=1"
-ICMP_V6_SETTINGS[4]="net.ipv6.conf.default.accept_redirects=0"
+IPV6_SETTINGS[0]="net.ipv6.conf.all.accept_redirects=0"
+IPV6_SETTINGS[1]="net.ipv6.conf.all.accept_source_route=0"
+IPV6_SETTINGS[2]="net.ipv6.conf.default.accept_source_route=0"
+IPV6_SETTINGS[3]="net.ipv6.route.flush=1"
+IPV6_SETTINGS[4]="net.ipv6.conf.default.accept_redirects=0"
 
 
-for setting in "${ICMP_V4_SETTINGS[@]}"; do
+if [ ! -f /etc/sysctl.conf.orig ]; then
+    cp /etc/sysctl.conf /etc/sysctl.conf.orig
+    # ensure there's a \n at the end of the file
+    echo "" >> /etc/sysctl.conf.orig
+fi
+
+cp /etc/sysctl.conf.orig /etc/sysctl.conf
+
+for setting in "${IPV4_SETTINGS[@]}"; do
   /sbin/sysctl -w $setting
+  echo "${setting}" >> /etc/sysctl.conf
 done
 
 # only harden ipv6 settings, if ipv6 is enabled
 if [ -d /proc/sys/net/ipv6 ]; then
-    for setting in "${ICMP_V6_SETTINGS[@]}"; do
+    for setting in "${IPV6_SETTINGS[@]}"; do
         /sbin/sysctl -w $setting
+        echo "${setting}" >> /etc/sysctl.conf
     done
 fi
 

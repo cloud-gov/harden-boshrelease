@@ -1,2 +1,2 @@
 check file hardening.log with path /tmp/hardening.log
-  if not exist then exec "/bin/bash -c '/var/vcap/packages/harden/bin/start.sh > /tmp/hardening.log'"
+  if not exist then exec "/bin/bash -c '/var/vcap/packages/harden/bin/start.sh 1> /tmp/hardening-temp.log 2>&1 && mv /tmp/hardening-temp.log /tmp/hardening.log'"

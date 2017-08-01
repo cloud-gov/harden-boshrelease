@@ -39,7 +39,6 @@ IPV4_SETTINGS[12]="net.ipv4.icmp_echo_ignore_broadcasts=1"
 IPV4_SETTINGS[13]="net.ipv4.icmp_ignore_bogus_error_responses=1"
 IPV4_SETTINGS[14]="net.ipv4.tcp_syncookies=1"
 IPV4_SETTINGS[15]="net.ipv4.route.flush=1"
-IPV4_SETTINGS[16]="net.ipv4.ip_forward=0"
 
 IPV6_SETTINGS[0]="net.ipv6.conf.all.accept_redirects=0"
 IPV6_SETTINGS[1]="net.ipv6.conf.all.accept_source_route=0"

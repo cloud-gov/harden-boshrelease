@@ -68,6 +68,10 @@ if [ -d /proc/sys/net/ipv6 ]; then
     done
 fi
 
+# reload all sysctl settings
+/sbin/sysctl -p /etc/sysctl.conf
+
+
 ###
 # Audit Strategy!
 # See https://github.com/18F/ubuntu/blob/master/hardening.md#audit-strategy

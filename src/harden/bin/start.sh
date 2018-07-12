@@ -69,7 +69,10 @@ if [ -d /proc/sys/net/ipv6 ]; then
 fi
 
 # reload all sysctl settings
+# error handling is disabled, ipv6 settings will auto apply if enabled
+set +e
 /sbin/sysctl -p /etc/sysctl.conf
+set -e
 
 
 ###

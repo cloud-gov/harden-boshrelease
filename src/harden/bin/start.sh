@@ -118,6 +118,7 @@ apt-get upgrade -y libpam-cracklib
 
 cp etc/pam.d/common-password /etc/pam.d/common-password
 cp etc/pam.d/login /etc/pam.d/login
+cp etc/pam.d/su /etc/pam.d/su
 cp etc/login.defs /etc/login.defs
 
 chown root:root /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs

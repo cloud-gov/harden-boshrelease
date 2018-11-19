@@ -180,7 +180,9 @@ service rsyslog restart
 ###
 # Ensure rpcbind does not run at start (Nessus check 6.7)
 ###
+set +e
 sed -i 's/^\(start.*\)/\#\1/' /etc/init/rpcbind-boot.conf
 service rpcbind stop || true
+set -e
 
 echo "---> Finished hardening process"

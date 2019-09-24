@@ -1,7 +1,7 @@
 jobs:
 - name: fisma-boshrelease
   plan:
-  - aggregate:
+  - in_parallel:
     - get: release-git-repo
       trigger: true
     - get: pipeline-tasks
@@ -12,7 +12,7 @@ jobs:
     config:
       params:
         PRIVATE_YML_CONTENT: ((private-yml))
-  - aggregate:
+  - in_parallel:
     - put: release-tarball
       params:
         file: finalized-release/fisma-*.tgz

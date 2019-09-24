@@ -11,7 +11,7 @@ jobs:
     file: pipeline-tasks/finalize-bosh-release.yml
     config:
       params:
-        PRIVATE_YML_CONTENT: {{private-yml}}
+        PRIVATE_YML_CONTENT: ((private-yml))
   - aggregate:
     - put: release-tarball
       params:
@@ -27,37 +27,37 @@ resources:
 - name: release-git-repo
   type: git
   source:
-    uri: {{release-git-url}}
-    branch: {{release-git-branch}}
+    uri: ((release-git-url))
+    branch: ((release-git-branch))
 - name: pipeline-tasks
   type: git
   source:
-    uri: {{pipeline-tasks-git-url}}
-    branch: {{pipeline-tasks-git-branch}}
+    uri: ((pipeline-tasks-git-url))
+    branch: ((pipeline-tasks-git-branch))
 - name: release-tarball
   type: s3
   source:
-    bucket: {{s3-bosh-releases-bucket}}
+    bucket: ((s3-bosh-releases-bucket))
     regexp: fisma-(.*).tgz
-    access_key_id: {{s3-bosh-releases-access-key-id}}
-    secret_access_key: {{s3-bosh-releases-secret-access-key}}
-    region_name: {{s3-bosh-releases-region}}
+    access_key_id: ((s3-bosh-releases-access-key-id))
+    secret_access_key: ((s3-bosh-releases-secret-access-key))
+    region_name: ((s3-bosh-releases-region))
     server_side_encryption: AES256
 - name: final-builds-dir-tarball
   type: s3
   source:
-    bucket: {{s3-bosh-releases-bucket}}
+    bucket: ((s3-bosh-releases-bucket))
     versioned_file: final-builds-dir-fisma.tgz
-    access_key_id: {{s3-bosh-releases-access-key-id}}
-    secret_access_key: {{s3-bosh-releases-secret-access-key}}
-    region_name: {{s3-bosh-releases-region}}
+    access_key_id: ((s3-bosh-releases-access-key-id))
+    secret_access_key: ((s3-bosh-releases-secret-access-key))
+    region_name: ((s3-bosh-releases-region))
     server_side_encryption: AES256
 - name: releases-dir-tarball
   type: s3
   source:
-    bucket: {{s3-bosh-releases-bucket}}
+    bucket: ((s3-bosh-releases-bucket))
     versioned_file: releases-dir-fisma.tgz
-    access_key_id: {{s3-bosh-releases-access-key-id}}
-    secret_access_key: {{s3-bosh-releases-secret-access-key}}
-    region_name: {{s3-bosh-releases-region}}
+    access_key_id: ((s3-bosh-releases-access-key-id))
+    secret_access_key: ((s3-bosh-releases-secret-access-key))
+    region_name: ((s3-bosh-releases-region))
     server_side_encryption: AES256

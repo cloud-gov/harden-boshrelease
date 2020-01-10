@@ -3,7 +3,8 @@ set -e
 
 echo "---> Starting hardening process"
 
-# cheap hack - nessus for some reason assumes the whole
+# cheap hack - nessus for some reason assumes it knows the absolute path
+# check first to make sure grep doesn't exist
 [[ -e /usr/bin/grep ]] || ln -s /bin/grep /usr/bin/grep
 
 cd /var/vcap/packages/harden/files

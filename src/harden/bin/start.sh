@@ -126,7 +126,7 @@ cp etc/pam.d/common-password /etc/pam.d/common-password
 cp etc/pam.d/login /etc/pam.d/login
 cp etc/pam.d/su /etc/pam.d/su
 cp etc/login.defs /etc/login.defs
-cp etc/security/pwquality.conf
+cp etc/security/pwquality.conf /etc/security/pwquality.conf
 
 chown root:root /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf
 chmod 0644 /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf

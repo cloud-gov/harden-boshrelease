@@ -15,6 +15,13 @@ chmod 0644 /etc/modprobe.d/18Fhardened.conf
 chown root:root /etc/modprobe.d/18Fhardened.conf
 
 ###
+# grub changes (workaround while we work with Nessus to fix scans)
+###
+
+cp etc/default/grub /etc/default/grub
+chmod 0600 /etc/default/grub
+
+###
 # Redirect protections
 # See https://github.com/18F/ubuntu/blob/master/hardening.md#redirect-protections
 ###
@@ -103,7 +110,7 @@ CRON_FILES[6]="/etc/cron.monthly"
 CRON_FILES[7]="/etc/cron.d"
 
 for file in "${CRON_FILES[@]}"; do
-  chmod 0700 $file
+  chmod 0600 $file
   chown root:root $file
 done
 
@@ -113,16 +120,16 @@ done
 # See https://github.com/18F/ubuntu/blob/master/hardening.md#password-policy
 ###
 
-
-apt-get upgrade -y libpam-cracklib
+apt-get upgrade -y libpam-pwquality
 
 cp etc/pam.d/common-password /etc/pam.d/common-password
 cp etc/pam.d/login /etc/pam.d/login
 cp etc/pam.d/su /etc/pam.d/su
 cp etc/login.defs /etc/login.defs
+cp etc/security/pwquality.conf
 
-chown root:root /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs
-chmod 0644 /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs
+chown root:root /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf
+chmod 0644 /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf
 
 ###
 # SSH Settings
@@ -184,5 +191,10 @@ set +e
 sed -i 's/^\(start.*\)/\#\1/' /etc/init/rpcbind-boot.conf
 service rpcbind stop || true
 set -e
+
+###
+# Limit logfile access
+###
+chmod -R 0600 /var/log/*
 
 echo "---> Finished hardening process"

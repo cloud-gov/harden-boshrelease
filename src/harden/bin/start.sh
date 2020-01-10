@@ -209,4 +209,15 @@ cp etc/profile /etc/profile
 chown root: /etc/bash.bashrc /etc/profile
 chmod 0644 /etc/bash.bashrc /etc/profile
 
+###
+# shadow
+###
+chmod 0640 /etc/shadow /etc/gshadow
+
+###
+# disable inactive users after 30 days
+###
+useradd -D -f 30
+
+
 echo "---> Finished hardening process"

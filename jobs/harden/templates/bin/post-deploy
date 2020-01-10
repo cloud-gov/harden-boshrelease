@@ -1,0 +1,2 @@
+#!/bin/bash
+/var/vcap/packages/harden/bin/start.sh 1> /tmp/hardening-temp.log 2>&1

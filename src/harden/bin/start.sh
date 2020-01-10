@@ -212,12 +212,19 @@ chmod 0644 /etc/bash.bashrc /etc/profile
 ###
 # shadow
 ###
-chmod 0640 /etc/shadow /etc/gshadow
+chown root:shadow /etc/shadow /etc/gshadow
 
 ###
 # disable inactive users after 30 days
 ###
 useradd -D -f 30
 
+###
+# set secure consoles
+###
+
+cp etc/securetty /etc/securetty
+chown root: /etc/securetty
+chmod 0644 /etc/securetty
 
 echo "---> Finished hardening process"

@@ -15,12 +15,11 @@ chmod 0644 /etc/modprobe.d/18Fhardened.conf
 chown root:root /etc/modprobe.d/18Fhardened.conf
 
 ###
-# grub changes
+# grub changes (workaround while we work with Nessus to fix scans)
 ###
 
 cp etc/default/grub /etc/default/grub
 chmod 0600 /etc/default/grub
-update-grub
 
 ###
 # Redirect protections

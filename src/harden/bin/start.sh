@@ -121,16 +121,16 @@ done
 # See https://github.com/18F/ubuntu/blob/master/hardening.md#password-policy
 ###
 
-
-apt-get upgrade -y libpam-cracklib
+apt-get upgrade -y libpam-pwquality
 
 cp etc/pam.d/common-password /etc/pam.d/common-password
 cp etc/pam.d/login /etc/pam.d/login
 cp etc/pam.d/su /etc/pam.d/su
 cp etc/login.defs /etc/login.defs
+cp etc/security/pwquality.conf
 
-chown root:root /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs
-chmod 0644 /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs
+chown root:root /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf
+chmod 0644 /etc/pam.d/common-password /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf
 
 ###
 # SSH Settings

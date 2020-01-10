@@ -2,6 +2,7 @@
 name: harden
 templates:
   .placeholder: .placeholder
+  bin/post-deploy: bin/post-deploy
 packages:
 - harden
 properties: {}

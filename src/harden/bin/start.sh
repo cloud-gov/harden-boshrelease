@@ -15,6 +15,14 @@ chmod 0644 /etc/modprobe.d/18Fhardened.conf
 chown root:root /etc/modprobe.d/18Fhardened.conf
 
 ###
+# grub changes
+###
+
+cp etc/default/grub /etc/default/grub
+chmod 0600 /etc/default/grub
+update-grub
+
+###
 # Redirect protections
 # See https://github.com/18F/ubuntu/blob/master/hardening.md#redirect-protections
 ###

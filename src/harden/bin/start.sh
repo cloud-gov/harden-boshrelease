@@ -111,7 +111,7 @@ CRON_FILES[6]="/etc/cron.monthly"
 CRON_FILES[7]="/etc/cron.d"
 
 for file in "${CRON_FILES[@]}"; do
-  chmod 0700 $file
+  chmod 0600 $file
   chown root:root $file
 done
 

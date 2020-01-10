@@ -3,6 +3,9 @@ set -e
 
 echo "---> Starting hardening process"
 
+# cheap hack - nessus for some reason assumes the whole
+ln -s /bin/grep /usr/bin/grep
+
 cd /var/vcap/packages/harden/files
 
 ###

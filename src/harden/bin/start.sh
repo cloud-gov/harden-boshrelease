@@ -193,4 +193,9 @@ sed -i 's/^\(start.*\)/\#\1/' /etc/init/rpcbind-boot.conf
 service rpcbind stop || true
 set -e
 
+###
+# Limit logfile access
+###
+chmod -R 0600 /var/log/*
+
 echo "---> Finished hardening process"

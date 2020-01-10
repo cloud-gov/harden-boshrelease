@@ -200,4 +200,13 @@ set -e
 ###
 chmod -R 0600 /var/log/*
 
+###
+# drop in profile files to pick up umask
+###
+cp etc/bash.bashrc /etc/bash.bashrc
+cp etc/profile /etc/profile
+
+chown root: /etc/bash.bashrc /etc/profile
+chmod 0644 /etc/bash.bashrc /etc/profile
+
 echo "---> Finished hardening process"

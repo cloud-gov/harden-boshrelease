@@ -3,6 +3,22 @@ name: harden
 templates:
   .placeholder: .placeholder
   bin/post-deploy: bin/post-deploy
-packages:
-- harden
+  files/etc/securetty: files/etc/securetty
+  files/etc/security/limits.conf: files/etc/security/limits.conf
+  files/etc/security/pwquality.conf: files/etc/security/pwquality.conf
+  files/etc/modprobe.d/18Fhardened.conf: files/etc/modprobe.d/18Fhardened.conf
+  files/etc/update-motd.d/00-header: files/etc/update-motd.d/00-header
+  files/etc/default/grub: files/etc/default/grub
+  files/etc/pam.d/common-auth: files/etc/pam.d/common-auth
+  files/etc/pam.d/su: files/etc/pam.d/su
+  files/etc/pam.d/common-password: files/etc/pam.d/common-password
+  files/etc/pam.d/login: files/etc/pam.d/login
+  files/etc/ssh/sshd_config: files/etc/ssh/sshd_config
+  files/etc/audit/audit.rules: files/etc/audit/audit.rules
+  files/etc/profile: files/etc/profile
+  files/etc/issue: files/etc/issue
+  files/etc/bash.bashrc: files/etc/bash.bashrc
+  files/etc/sysctl.conf: files/etc/sysctl.conf
+  files/etc/login.defs: files/etc/login.defs
+packages: []
 properties: {}

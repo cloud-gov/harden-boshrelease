@@ -229,4 +229,9 @@ cp etc/securetty /etc/securetty
 chown root: /etc/securetty
 chmod 0644 /etc/securetty
 
+###
+# install tcpwrappers
+###
+apt-get upgrade -y tcpd
+
 echo "---> Finished hardening process"

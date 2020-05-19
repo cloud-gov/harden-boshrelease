@@ -235,3 +235,7 @@ chmod 0644 /etc/securetty
 apt-get upgrade -y tcpd
 
 echo "---> Finished hardening process"
+if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then
+  echo "---> Updating AIDE db"
+  /var/vcap/jobs/aide/bin/update-aide-db
+ vi

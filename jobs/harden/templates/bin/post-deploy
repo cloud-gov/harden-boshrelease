@@ -18,6 +18,19 @@ cp etc/modprobe.d/18Fhardened.conf /etc/modprobe.d/18Fhardened.conf
 chmod 0644 /etc/modprobe.d/18Fhardened.conf
 chown root:root /etc/modprobe.d/18Fhardened.conf
 
+### 
+# Disable modules for K8s kernels
+# Remove this once our K8s cluster is gone (early 2021)
+###
+
+if grep -xq "kubernetes" /var/vcap/instance/deployment ; then
+  cat >> /etc/modprobe.d/18Fhardened.conf <<ENDK8
+# K8s patches/mitigations
+install btrfs /bin/true
+install crypto_user /bin/true
+ENDK8
+fi
+
 ###
 # grub changes (workaround while we work with Nessus to fix scans)
 ###

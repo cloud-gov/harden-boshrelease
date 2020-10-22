@@ -28,6 +28,8 @@ if grep -xq "kubernetes" /var/vcap/instance/deployment ; then
 # K8s patches/mitigations
 install btrfs /bin/true
 install crypto_user /bin/true
+install nbd /bin/true
+install cipso_ipv4 /bin/true
 ENDK8
 fi
 

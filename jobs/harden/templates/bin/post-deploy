@@ -31,6 +31,7 @@ install crypto_user /bin/true
 install nbd /bin/true
 install cipso_ipv4 /bin/true
 install bfq /bin/true
+install bcache /bin/true
 ENDK8
 fi
 

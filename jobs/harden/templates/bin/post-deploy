@@ -32,6 +32,7 @@ install nbd /bin/true
 install cipso_ipv4 /bin/true
 install bfq /bin/true
 install bcache /bin/true
+install zram /bin/true
 ENDK8
 fi
 

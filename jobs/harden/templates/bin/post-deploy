@@ -33,6 +33,9 @@ install cipso_ipv4 /bin/true
 install bfq /bin/true
 install bcache /bin/true
 install zram /bin/true
+install sunrpc /bin/true
+install nfs /bin/true
+install vhost /bin/true # CVE-2020-10942
 ENDK8
 fi
 

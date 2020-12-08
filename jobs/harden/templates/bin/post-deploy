@@ -35,10 +35,16 @@ install bcache /bin/true
 install zram /bin/true
 install rpcsec_gss_krb5 /bin/true
 install nfs /bin/true
-install vhost /bin/true # CVE-2020-10942
+install vhost /bin/true         # CVE-2020-10942
 install xfs /bin/true
-install overlay /bin/true # CVE-2020-16120
-install nfc /bin/true # CVE-2020-26088
+install overlay /bin/true       # CVE-2020-16120
+install nfc /bin/true           # CVE-2020-26088
+install intel_rapl /bin/true    # CVE-2020-8694 
+install ccp /bin/true           # (CVE-2019-18808) 
+install adis_lib /bin/true      # CVE-2019-19061
+install f2fs /bin/true          # CVE-2019-9445
+install kvm /bin/true           # CVE-2020-2732
+install ipmi_msghandler /bin/true # CVE-2019-19046
 ENDK8
 fi
 

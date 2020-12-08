@@ -36,6 +36,8 @@ install zram /bin/true
 install rpcsec_gss_krb5 /bin/true
 install nfs /bin/true
 install vhost /bin/true # CVE-2020-10942
+install xfs /bin/true
+install overlay /bin/true # CVE-2020-16120
 ENDK8
 fi
 

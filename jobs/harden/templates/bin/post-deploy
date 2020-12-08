@@ -33,10 +33,10 @@ install cipso_ipv4 /bin/true
 install bfq /bin/true
 install bcache /bin/true
 install zram /bin/true
-install rpcsec_gss_krb5 /bin/true
-install nfs /bin/true
+install rpcsec_gss_krb5 /bin/true # CVE-2020-12656
+install nfs /bin/true           # multiple
 install vhost /bin/true         # CVE-2020-10942
-install xfs /bin/true
+install xfs /bin/true           # multiple
 install overlay /bin/true       # CVE-2020-16120
 install nfc /bin/true           # CVE-2020-26088
 install intel_rapl /bin/true    # CVE-2020-8694 

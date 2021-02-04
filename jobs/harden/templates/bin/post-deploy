@@ -47,6 +47,11 @@ install kvm /bin/true           # CVE-2020-2732
 install ipmi_msghandler /bin/true # CVE-2019-19046
 install usbtest /bin/true       # CVE-2020-15393
 install sunrpc /bin/true        # CVE-2020-12656
+install nf_conntrack_netlink /bin/true   # CVE-2020-25211
+install rbd /bin/true           # CVE-2020-25284
+install hdlc_ppp /bin/true      # CVE-2020-25643
+install syncppp /bin/true       # CVE-2020-25643
+install geneve /bin/true        # CVE-2020-25645
 ENDK8
 fi
 

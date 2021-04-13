@@ -18,43 +18,6 @@ cp etc/modprobe.d/18Fhardened.conf /etc/modprobe.d/18Fhardened.conf
 chmod 0644 /etc/modprobe.d/18Fhardened.conf
 chown root:root /etc/modprobe.d/18Fhardened.conf
 
-### 
-# Disable modules for K8s kernels
-# Remove this once our K8s cluster is gone (early 2021)
-###
-
-if grep -xq "kubernetes" /var/vcap/instance/deployment ; then
-  cat >> /etc/modprobe.d/18Fhardened.conf <<ENDK8
-# K8s patches/mitigations
-install btrfs /bin/true
-install crypto_user /bin/true
-install nbd /bin/true
-install cipso_ipv4 /bin/true
-install bfq /bin/true
-install bcache /bin/true
-install zram /bin/true
-install rpcsec_gss_krb5 /bin/true # CVE-2020-12656
-install nfs /bin/true           # multiple
-install vhost /bin/true         # CVE-2020-10942
-install xfs /bin/true           # multiple
-install overlay /bin/true       # CVE-2020-16120
-install nfc /bin/true           # CVE-2020-26088
-install intel_rapl /bin/true    # CVE-2020-8694 
-install ccp /bin/true           # (CVE-2019-18808) 
-install adis_lib /bin/true      # CVE-2019-19061
-install f2fs /bin/true          # CVE-2019-9445
-install kvm /bin/true           # CVE-2020-2732
-install ipmi_msghandler /bin/true # CVE-2019-19046
-install usbtest /bin/true       # CVE-2020-15393
-install sunrpc /bin/true        # CVE-2020-12656
-install nf_conntrack_netlink /bin/true   # CVE-2020-25211
-install rbd /bin/true           # CVE-2020-25284
-install hdlc_ppp /bin/true      # CVE-2020-25643
-install syncppp /bin/true       # CVE-2020-25643
-install geneve /bin/true        # CVE-2020-25645
-ENDK8
-fi
-
 ###
 # grub changes (workaround while we work with Nessus to fix scans)
 ###

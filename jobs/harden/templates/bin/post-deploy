@@ -54,8 +54,11 @@ IPV4_SETTINGS[15]="net.ipv4.route.flush=1"
 IPV6_SETTINGS[0]="net.ipv6.conf.all.accept_redirects=0"
 IPV6_SETTINGS[1]="net.ipv6.conf.all.accept_source_route=0"
 IPV6_SETTINGS[2]="net.ipv6.conf.default.accept_source_route=0"
-IPV6_SETTINGS[3]="net.ipv6.route.flush=1"
-IPV6_SETTINGS[4]="net.ipv6.conf.default.accept_redirects=0"
+IPV6_SETTINGS[3]="net.ipv6.conf.all.accept_ra=0"
+IPV6_SETTINGS[4]="net.ipv6.conf.default.accept_ra=0"
+IPV6_SETTINGS[5]="net.ipv6.conf.all.accept_redirects=0"
+IPV6_SETTINGS[6]="net.ipv6.conf.default.accept_redirects=0"
+IPV6_SETTINGS[6]="net.ipv6.route.flush=1"
 
 
 if [ ! -f /etc/sysctl.conf.orig ]; then

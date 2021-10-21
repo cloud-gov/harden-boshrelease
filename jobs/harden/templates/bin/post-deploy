@@ -201,6 +201,12 @@ service rpcbind stop || true
 set -e
 
 ###
+# disable rsync
+###
+
+systemctl disable rsync
+
+###
 # Limit logfile access
 ###
 chmod -R 0600 /var/log/*

@@ -175,6 +175,8 @@ cp etc/security/limits.conf /etc/security/limits.conf
 ###
 
 chmod 0750 /home/vcap
+chmod 0750 /var/mail
+
 
 ###
 # Ensure syslog emits at least one entry each minute

@@ -233,6 +233,13 @@ chown root: /etc/securetty
 chmod 0644 /etc/securetty
 
 ###
+# clean up after systemd-timesyncd
+###
+
+rm /var/lib/private/systemd/timesync/clock
+rmdir /var/lib/private/systemd/timesync
+
+###
 # install tcpwrappers
 ###
 apt-get upgrade -y tcpd

@@ -244,8 +244,10 @@ chmod 0644 /etc/securetty
 # clean up after systemd-timesyncd
 ###
 
+set +e
 rm /var/lib/private/systemd/timesync/clock
 rmdir /var/lib/private/systemd/timesync
+set -e
 
 ###
 # install tcpwrappers

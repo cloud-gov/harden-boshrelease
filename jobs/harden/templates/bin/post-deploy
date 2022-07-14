@@ -288,6 +288,12 @@ sed -ri 's/ && ! grep '^password' ${grub_cfg}.new >/dev/null//' /usr/sbin/grub-m
 chown root:root /boot/grub/grub.cfg
 chmod u-wx,go-rwx /boot/grub/grub.cfg
 
+###
+# Stop and mask timesyncd
+###
+systemctl stop systemd-timesyncd.service
+systemctl mask systemd-timesyncd.service
+
 
 echo "---> Finished hardening process"
 if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then

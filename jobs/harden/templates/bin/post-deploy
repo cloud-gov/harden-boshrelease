@@ -304,6 +304,14 @@ grep -Els '^s*net.ipv6.conf.all.forwardings*=s*1' /etc/sysctl.conf /etc/sysctl.d
 ###
 find /var/log -type f -exec chmod g-wx,o-rwx '{}' + -o -type d -exec chmod g-w,o-rwx '{}' +
 
+###
+# Update sudoers file
+###
+cat << 'EOF' >> /etc/sudoers
+Defaults  use_pty
+Defaults  logfile='/var/log/sudo.log'
+EOF
+
 
 echo "---> Finished hardening process"
 if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then

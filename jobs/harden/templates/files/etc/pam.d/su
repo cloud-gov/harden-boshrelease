@@ -60,4 +60,4 @@ session    required   pam_limits.so
 @include common-session
 
 
-auth required pam_wheel.so use_uid
+auth required pam_wheel.so use_uid group=sugroup

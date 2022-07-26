@@ -312,6 +312,9 @@ Defaults  use_pty
 Defaults  logfile='/var/log/sudo.log'
 EOF
 
+# add empty group specified for use of su command.
+groupadd sugroup
+
 
 echo "---> Finished hardening process"
 if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then

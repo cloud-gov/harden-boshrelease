@@ -158,7 +158,7 @@ UMASK		077
 #	PASS_WARN_AGE	Number of days warning given before a password expires.
 #
 PASS_MAX_DAYS	90
-PASS_MIN_DAYS	7
+PASS_MIN_DAYS	1
 PASS_WARN_AGE	10
 
 #

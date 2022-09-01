@@ -192,6 +192,28 @@ $ActionWriteAllMarkmessages on
 module(load="imuxsock" SysSock.IgnoreOwnMessages="off" SysSock.RateLimit.Interval="0")
 EOF
 
+###
+# Specify files and rules for logging
+###
+cat << 'EOF' >> /etc/rsyslog.d/50-default.conf
+*.emerg                                  :omusrmsg:*
+auth,authpriv.*                          /var/log/auth.log
+mail.*                                  -/var/log/mail
+mail.info                               -/var/log/mail.info
+mail.warning                            -/var/log/mail.warn
+mail.err                                 /var/log/mail.err
+news.crit                               -/var/log/news/news.crit
+news.err                                -/var/log/news/news.err
+news.notice                             -/var/log/news/news.notice
+*.=warning;*.=err                       -/var/log/warn
+*.crit                                   /var/log/warn
+*.*;mail.none;news.none                 -/var/log/messages
+local0,local1.*                         -/var/log/localmessages
+local2,local3.*                         -/var/log/localmessages
+local4,local5.*                         -/var/log/localmessages
+local6,local7.*                         -/var/log/localmessages
+EOF
+
 service rsyslog restart
 
 ###
@@ -253,6 +275,46 @@ set -e
 # install tcpwrappers
 ###
 apt-get upgrade -y tcpd
+
+###
+# Ensure bootloader permissions are not overridden
+###
+sed -ri 's/chmods+[0-7][0-7][0-7]s+${grub_cfg}.new/chmod 400 ${grub_cfg}.new/' /usr/sbin/grub-mkconfig
+sed -ri 's/ && ! grep '^password' ${grub_cfg}.new >/dev/null//' /usr/sbin/grub-mkconfig
+
+###
+# Set grub permissions
+###
+chown root:root /boot/grub/grub.cfg
+chmod u-wx,go-rwx /boot/grub/grub.cfg
+
+###
+# Stop and mask timesyncd
+###
+systemctl stop systemd-timesyncd.service
+systemctl mask systemd-timesyncd.service
+
+###
+# Disable ipv6 forwarding
+###
+grep -Els '^s*net.ipv6.conf.all.forwardings*=s*1' /etc/sysctl.conf /etc/sysctl.d/*.conf /usr/lib/sysctl.d/*.conf /run/sysctl.d/*.conf | while read filename; do sed -ri 's/^s*(net.ipv6.conf.all.forwardings*)(=)(s*S+b).*$/# *REMOVED* 1/' $filename; done; sysctl -w net.ipv6.conf.all.forwarding=0; sysctl -w net.ipv6.route.flush=1
+
+###
+# Set permissions for log files
+###
+find /var/log -type f -exec chmod g-wx,o-rwx '{}' + -o -type d -exec chmod g-w,o-rwx '{}' +
+
+###
+# Update sudoers file
+###
+cat << 'EOF' >> /etc/sudoers
+Defaults  use_pty
+Defaults  logfile='/var/log/sudo.log'
+EOF
+
+# add empty group specified for use of su command.
+groupadd sugroup
+
 
 echo "---> Finished hardening process"
 if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then

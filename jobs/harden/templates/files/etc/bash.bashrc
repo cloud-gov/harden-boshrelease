@@ -69,3 +69,6 @@ fi
 
 # everything above is from BOSH
 umask 027
+
+#add default timeout
+readonly TMOUT=900 ; export TMOUT

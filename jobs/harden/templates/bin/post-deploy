@@ -291,13 +291,13 @@ chmod u-wx,go-rwx /boot/grub/grub.cfg
 ###
 # Stop and mask timesyncd
 ###
-systemctl stop systemd-timesyncd.service
-systemctl mask systemd-timesyncd.service
+#systemctl stop systemd-timesyncd.service
+#systemctl mask systemd-timesyncd.service
 
 ###
 # Disable ipv6 forwarding
 ###
-grep -Els '^s*net.ipv6.conf.all.forwardings*=s*1' /etc/sysctl.conf /etc/sysctl.d/*.conf /usr/lib/sysctl.d/*.conf /run/sysctl.d/*.conf | while read filename; do sed -ri 's/^s*(net.ipv6.conf.all.forwardings*)(=)(s*S+b).*$/# *REMOVED* 1/' $filename; done; sysctl -w net.ipv6.conf.all.forwarding=0; sysctl -w net.ipv6.route.flush=1
+#grep -Els '^s*net.ipv6.conf.all.forwardings*=s*1' /etc/sysctl.conf /etc/sysctl.d/*.conf /usr/lib/sysctl.d/*.conf /run/sysctl.d/*.conf | while read filename; do sed -ri 's/^s*(net.ipv6.conf.all.forwardings*)(=)(s*S+b).*$/# *REMOVED* 1/' $filename; done; sysctl -w net.ipv6.conf.all.forwarding=0; sysctl -w net.ipv6.route.flush=1
 
 ###
 # Set permissions for log files

@@ -313,7 +313,9 @@ Defaults  logfile='/var/log/sudo.log'
 EOF
 
 # add empty group specified for use of su command.
-groupadd sugroup
+if [ ! "$(getent group sugroup)" ]; then
+  groupadd sugroup
+fi
 
 
 echo "---> Finished hardening process"

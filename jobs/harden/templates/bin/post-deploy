@@ -307,10 +307,10 @@ find /var/log -type f -exec chmod g-wx,o-rwx '{}' + -o -type d -exec chmod g-w,o
 ###
 # Update sudoers file
 ###
-cat << 'EOF' >> /etc/sudoers
-Defaults  use_pty
-Defaults  logfile='/var/log/sudo.log'
-EOF
+#cat << 'EOF' >> /etc/sudoers
+#Defaults  use_pty
+#Defaults  logfile='/var/log/sudo.log'
+#EOF
 
 # add empty group specified for use of su command.
 if [ ! "$(getent group sugroup)" ]; then

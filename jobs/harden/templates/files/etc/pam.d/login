@@ -108,4 +108,4 @@ session    optional   pam_mail.so standard
 session [success=ok ignore=ignore module_unknown=ignore default=bad] pam_selinux.so open
 # When the module is present, "required" would be sufficient (When SELinux
 # is disabled, this returns success.)
-auth required pam_tally2.so onerr=fail audit silent deny=5 unlock_time=900
+auth required pam_faillock.so onerr=fail audit silent deny=5 unlock_time=900

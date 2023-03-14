@@ -182,7 +182,7 @@ chmod 0750 /var/mail
 # Ensure syslog emits at least one entry each minute
 ###
 sed -i 's/^#\($ModLoad immark\)/\1/' /etc/rsyslog.conf
-sed -i 's/^\($ModLoad imuxsock\)/#\1/' /etc/rsyslog.conf
+# sed -i 's/^\($ModLoad imuxsock\)/#\1/' /etc/rsyslog.conf
 sed -i 's/^\($RepeatedMsgReduction on\)/#\1/' /etc/rsyslog.conf
 
 cat << 'EOF' > /etc/rsyslog.d/00-heartbeat.conf

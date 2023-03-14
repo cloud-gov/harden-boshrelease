@@ -14,7 +14,7 @@
 # pam-auth-update(8) for details.
 
 # here are the per-package modules (the "Primary" block)
-auth    required        pam_tally2.so onerr=fail audit silent deny=5 unlock_time=900
+auth    required        pam_faillock.so onerr=fail audit silent deny=5 unlock_time=900
 auth    [success=1 default=ignore]      pam_unix.so
 # here's the fallback if no module succeeds
 auth    requisite                       pam_deny.so

@@ -210,7 +210,7 @@ set -e
 # remove rsync
 ###
 
-sudo apt-get remove rsync
+sudo apt-get -y remove rsync
 
 ###
 # Limit logfile access

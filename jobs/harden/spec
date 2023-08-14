@@ -6,6 +6,7 @@ templates:
   files/etc/securetty: files/etc/securetty
   files/etc/security/limits.conf: files/etc/security/limits.conf
   files/etc/security/pwquality.conf: files/etc/security/pwquality.conf
+  files/etc/security/faillock.conf: files/etc/security/faillock.conf
   files/etc/modprobe.d/18Fhardened.conf: files/etc/modprobe.d/18Fhardened.conf
   files/etc/update-motd.d/00-header: files/etc/update-motd.d/00-header
   files/etc/default/grub: files/etc/default/grub

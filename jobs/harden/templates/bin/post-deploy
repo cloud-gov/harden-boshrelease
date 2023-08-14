@@ -135,7 +135,7 @@ cp etc/pam.d/login /etc/pam.d/login
 cp etc/pam.d/su /etc/pam.d/su
 cp etc/login.defs /etc/login.defs
 cp etc/security/pwquality.conf /etc/security/pwquality.conf
-cp etc/secutiy/faillock.conf /etc/security/faillock.conf
+cp etc/security/faillock.conf /etc/security/faillock.conf
 
 chown root:root /etc/pam.d/common-password /etc/pam.d/common-auth /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf /etc/security/faillock.conf
 chmod 0644 /etc/pam.d/common-password /etc/pam.d/common-auth /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf /etc/security/faillock.conf

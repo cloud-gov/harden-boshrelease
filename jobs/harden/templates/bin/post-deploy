@@ -207,7 +207,7 @@ service rpcbind stop || true
 set -e
 
 ###
-# disable rsync
+# remove rsync
 ###
 
 sudo apt-get remove rsync

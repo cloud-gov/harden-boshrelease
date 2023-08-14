@@ -135,9 +135,10 @@ cp etc/pam.d/login /etc/pam.d/login
 cp etc/pam.d/su /etc/pam.d/su
 cp etc/login.defs /etc/login.defs
 cp etc/security/pwquality.conf /etc/security/pwquality.conf
+cp etc/secutiy/faillock.conf /etc/security/faillock.conf
 
-chown root:root /etc/pam.d/common-password /etc/pam.d/common-auth /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf
-chmod 0644 /etc/pam.d/common-password /etc/pam.d/common-auth /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf
+chown root:root /etc/pam.d/common-password /etc/pam.d/common-auth /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf /etc/security/faillock.conf
+chmod 0644 /etc/pam.d/common-password /etc/pam.d/common-auth /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf /etc/security/faillock.conf
 
 ###
 # SSH Settings
@@ -153,11 +154,13 @@ chmod 0600 /etc/ssh/sshd_config
 
 cp etc/issue /etc/issue
 cp etc/issue /etc/issue.net
+cp etc/update-motd.d/00-header /etc/update-motd.d/00-header
 touch /etc/motd
 
 ISSUE_FILES[0]="/etc/issue"
 ISSUE_FILES[1]="/etc/issue.net"
 ISSUE_FILES[2]="/etc/motd"
+ISSUE_FILES[3]="/etc/update-motd.d/00-header"
 
 for file in "${ISSUE_FILES[@]}"; do
   chmod 0644 $file
@@ -204,10 +207,10 @@ service rpcbind stop || true
 set -e
 
 ###
-# disable rsync
+# remove rsync
 ###
 
-systemctl disable rsync
+sudo apt-get remove rsync
 
 ###
 # Limit logfile access
@@ -232,6 +235,16 @@ chown root:shadow /etc/shadow /etc/gshadow
 # disable inactive users after 30 days
 ###
 useradd -D -f 30
+
+####
+# enforce password settings
+###
+
+chage --mindays 1 root
+chage --maxdays 90 root
+chage --maxdays 90 vcap
+chage --inactive 30 root
+chage --inactive 30 vcap
 
 ###
 # set secure consoles
@@ -286,10 +299,10 @@ find /var/log -type f -exec chmod g-wx,o-rwx '{}' + -o -type d -exec chmod g-w,o
 ###
 # Update sudoers file
 ###
-#cat << 'EOF' >> /etc/sudoers
-#Defaults  use_pty
-#Defaults  logfile='/var/log/sudo.log'
-#EOF
+cat << 'EOF' >> /etc/sudoers
+Defaults  use_pty
+Defaults  logfile='/var/log/sudo.log'
+EOF
 
 # add empty group specified for use of su command.
 if [ ! "$(getent group sugroup)" ]; then

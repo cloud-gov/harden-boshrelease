@@ -211,6 +211,13 @@ set -e
 ###
 
 sudo apt-get -y remove rsync
+sudo apt -y purge rsync
+
+###
+# remove chrony
+###
+
+sudo apt -y purge chrony
 
 ###
 # Limit logfile access

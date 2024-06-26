@@ -217,7 +217,7 @@ sudo apt -y purge rsync
 # remove chrony
 ###
 
-sudo apt -y purge chrony
+# sudo apt -y purge chrony  # Needed for bosh-agent to configure ntp, chronyc is hardcoded into the agent
 
 ###
 # Limit logfile access

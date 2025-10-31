@@ -1,0 +1,12 @@
+---
+name: ubuntu-advantage-pro-token
+
+templates:
+  drain.sh: bin/drain
+  pre-start.sh: bin/pre-start
+
+packages: []
+
+properties:
+  ubuntu_advantage_pro_token:
+    description: "The Ubuntu subscription token (available on the Ubuntu pro dashboard)."

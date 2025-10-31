@@ -1,15 +1,8 @@
 #!/bin/bash
 set -ex
-echo " "
-echo "----- PRE START -----"
-apt-get install -y jq
-existing_token=$(pro status --format json | jq -r '.account.id')
-if [ -z "$existing_token" ]; then
-    echo "Attaching Pro License"
-    pro attach '<%= p("ubuntu_advantage_pro_token") %>'
-else 
-    echo "License already attached. Skipping..."
-fi
+
+echo "Attaching Pro License"
+pro attach '<%= p("ubuntu_advantage_pro_token") %>'
 
 echo "Checking if fips enabled"
 current_kernel_fips=$(uname -r | grep "fips")
@@ -26,4 +19,3 @@ else
     echo "FIPs crypto modules NOT enabled"
     exit 1
 fi
-echo "----------"

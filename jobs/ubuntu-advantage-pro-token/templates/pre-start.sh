@@ -2,7 +2,7 @@
 set -ex
 
 echo "Attaching Pro License"
-pro attach '<%= p("ubuntu_advantage_pro_token") %>'
+pro attach '<%= p("ubuntu_advantage_pro_token") %>' || echo "`pro attach` failed. This might be ok."
 
 echo "Checking if fips enabled"
 current_kernel_fips=$(uname -r | grep "fips")

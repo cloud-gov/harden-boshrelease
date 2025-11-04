@@ -2,7 +2,7 @@
 set -ex
 
 echo "Attaching Pro License"
-its_ok="`pro attach` failed. This likely means the machine was already attached to a license token."
+its_ok="pro attach failed. This likely means the machine was already attached to a license token."
 pro attach '<%= p("ubuntu_advantage_pro_token") %>' || echo "$its_ok"
 
 echo "Checking if fips enabled"

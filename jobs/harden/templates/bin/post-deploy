@@ -10,6 +10,15 @@ echo "---> Starting hardening process"
 cd /var/vcap/jobs/harden/files
 
 ###
+# AWS Ubuntu Mirrors
+#
+###
+
+cp etc/apt/sources.list.d/aws-ubuntu-mirrors.list /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
+chmod 0644 /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
+chown root:root /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
+
+###
 # /etc/modprobe.d Safe Defaults
 # See https://github.com/18F/ubuntu/blob/master/hardening.md
 ###

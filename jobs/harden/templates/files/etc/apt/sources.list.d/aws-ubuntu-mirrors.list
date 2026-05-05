@@ -1,0 +1,2 @@
+deb http://us-gov-west-1.ec2.archive.ubuntu.com/ubuntu jammy main universe multiverse
+deb http://us-gov-west-1.ec2.archive.ubuntu.com/ubuntu jammy-updates main universe multiverse

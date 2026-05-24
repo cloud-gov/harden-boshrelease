@@ -3,5 +3,5 @@ blobstore:
   provider: s3
   options:
     bucket_name: 18f-boshrelease-blob
-
+    host: s3-fips.us-gov-west-1.amazonaws.com
 final_name: fisma-jammy

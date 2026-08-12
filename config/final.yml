@@ -4,4 +4,4 @@ blobstore:
   options:
     bucket_name: 18f-boshrelease-blob
 
-final_name: fisma-jammy
+final_name: fisma-noble

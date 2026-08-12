@@ -12,4 +12,8 @@ properties:
     description: "The Ubuntu subscription token (available on the Ubuntu pro dashboard)."
   stig_profile:
     description: "usg STIG profile name to audit against."
-    default: "stig-v1r1"
+    default: "disa_stig"
+  require_fips:
+    description: "Fail pre-start if a FIPS kernel is not active. Set false on non-FIPS stemcells (e.g. ubuntu-noble, which has no FIPS variant)."
+    default: true
+

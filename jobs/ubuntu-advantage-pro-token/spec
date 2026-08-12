@@ -10,3 +10,6 @@ packages: []
 properties:
   ubuntu_advantage_pro_token:
     description: "The Ubuntu subscription token (available on the Ubuntu pro dashboard)."
+  stig_profile:
+    description: "usg STIG profile name to audit against."
+    default: "stig-v1r1"

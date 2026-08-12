@@ -211,10 +211,16 @@ service rsyslog restart
 ###
 # Ensure rpcbind does not run at start (Nessus check 6.7)
 ###
-set +e
-sed -i 's/^\(start.*\)/\#\1/' /etc/init/rpcbind-boot.conf
-service rpcbind stop || true
-set -e
+# rpcbind (portmapper) hardening.
+# On the Noble stemcell rpcbind is not installed, so there is nothing to disable.
+# Guard the step so it is a safe no-op if the package is absent, and handle the
+# socket-activated case if it ever IS present (systemd; the old Upstart
+# /etc/init/rpcbind-boot.conf path is obsolete and removed).
+if dpkg -l | grep -qw rpcbind; then
+  systemctl stop    rpcbind.socket rpcbind.service 2>/dev/null || true
+  systemctl disable rpcbind.socket rpcbind.service 2>/dev/null || true
+  systemctl mask    rpcbind.socket rpcbind.service 2>/dev/null || true
+fi
 
 ###
 # remove rsync
@@ -275,10 +281,16 @@ chmod 0644 /etc/securetty
 # clean up after systemd-timesyncd
 ###
 
-set +e
-rm /var/lib/private/systemd/timesync/clock
-rmdir /var/lib/private/systemd/timesync
-set -e
+# systemd-timesyncd hardening: chrony is the time source, not timesyncd.
+# On the Noble stemcell timesyncd is already removed (dpkg state 'rc'); purge the
+# residual config so nothing is left for audit/Nessus to flag. Guarded so it's a
+# safe no-op if the package is fully absent.
+if dpkg -l | grep -E '^rc|^ii' | grep -qw systemd-timesyncd; then
+  apt-get -y purge systemd-timesyncd 2>/dev/null || true
+fi
+# clean residual runtime state if present (idempotent)
+rm -f /var/lib/private/systemd/timesync/clock 2>/dev/null || true
+rmdir /var/lib/private/systemd/timesync 2>/dev/null || true
 
 ###
 # install tcpwrappers
@@ -333,4 +345,18 @@ if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then
   set +e # aide returns non-zero on db changes
   /var/vcap/jobs/aide/bin/update-aide-db
   set -e
+fi
+
+USG_PROFILE='<%= p("stig_profile") %>'
+REPORT_DIR=/var/vcap/sys/log/usg
+mkdir -p "${REPORT_DIR}"
+
+if command -v usg >/dev/null 2>&1; then
+  echo "Running usg STIG audit (report-only): ${USG_PROFILE}"
+  usg audit "${USG_PROFILE}" \
+    --html-file   "${REPORT_DIR}/usg-${USG_PROFILE}-audit.html" \
+    --results-file "${REPORT_DIR}/usg-${USG_PROFILE}-audit.xml" \
+    || echo "usg audit failed"
+else
+  echo "usg not installed after enable; skipping STIG audit"
 fi

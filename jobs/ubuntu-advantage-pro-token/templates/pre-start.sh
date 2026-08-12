@@ -5,6 +5,10 @@ echo "Attaching Pro License"
 its_ok="pro attach failed. This likely means the machine was already attached to a license token."
 pro attach '<%= p("ubuntu_advantage_pro_token") %>' || echo "$its_ok"
 
+# Enable the usg service (installs the usg package from the Pro/esm mirror).
+echo "Enabling usg service"
+pro enable usg --assume-yes || echo "pro enable usg failed (already enabled, or egress to esm.ubuntu.com blocked)"
+
 echo "Checking if fips enabled"
 current_kernel_fips=$(uname -r | grep "fips")
 if [ -f /proc/sys/crypto/fips_enabled ] && [ ! -z "$current_kernel_fips" ]; then

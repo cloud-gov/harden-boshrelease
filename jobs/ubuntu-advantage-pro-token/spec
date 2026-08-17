@@ -4,6 +4,7 @@ name: ubuntu-advantage-pro-token
 templates:
   drain.sh: bin/drain
   pre-start.sh: bin/pre-start
+  post-deploy.sh: bin/post-deploy
 
 packages: []
 

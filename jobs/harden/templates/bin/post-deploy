@@ -347,3 +347,8 @@ if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then
   set -e
 fi
 
+# install and update cracklib to support the new pam_pwquality
+apt-get install -y cracklib-runtime
+update-cracklib || true
+
+

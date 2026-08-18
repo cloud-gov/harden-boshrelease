@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 USG_PROFILE='<%= p("stig_profile") %>'
 REPORT_DIR=/var/vcap/sys/log/usg
 mkdir -p "${REPORT_DIR}"

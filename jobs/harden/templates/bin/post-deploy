@@ -7,6 +7,15 @@ echo "---> Starting hardening process"
 # check first to make sure grep doesn't exist
 [[ -e /usr/bin/grep ]] || ln -s /bin/grep /usr/bin/grep
 
+# Make all apt/dpkg calls in this script non-interactive and force local
+# conffile changes (e.g. our /etc/issue banner) to win over package defaults
+# without prompting. Without this, any apt-get call below that pulls in a
+# package whose conffile we've customized (base-files -> /etc/issue, etc.)
+# will block forever waiting on a stdin prompt with no TTY attached, and the
+# post-deploy script will fail. See harden-boshrelease noble-main notes.
+export DEBIAN_FRONTEND=noninteractive
+APT_CONFFILE_OPTS=(-o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confdef")
+
 cd /var/vcap/jobs/harden/files
 
 ###
@@ -136,8 +145,8 @@ done
 # See https://github.com/18F/ubuntu/blob/master/hardening.md#password-policy
 ###
 
-apt update
-apt-get upgrade -y libpam-pwquality
+apt-get update
+apt-get "${APT_CONFFILE_OPTS[@]}" install --only-upgrade -y libpam-pwquality
 
 cp etc/pam.d/common-password /etc/pam.d/common-password
 cp etc/pam.d/common-auth /etc/pam.d/common-auth
@@ -227,7 +236,7 @@ fi
 ###
 
 sudo apt-get -y remove rsync
-sudo apt -y purge rsync
+sudo apt-get -y purge rsync
 
 ###
 # remove chrony
@@ -295,7 +304,7 @@ rmdir /var/lib/private/systemd/timesync 2>/dev/null || true
 ###
 # install tcpwrappers
 ###
-apt-get upgrade -y tcpd
+apt-get "${APT_CONFFILE_OPTS[@]}" install --only-upgrade -y tcpd
 
 ###
 # Ensure bootloader permissions are not overridden
@@ -348,7 +357,5 @@ if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then
 fi
 
 # install and update cracklib to support the new pam_pwquality
-apt-get install -y cracklib-runtime
+apt-get "${APT_CONFFILE_OPTS[@]}" install -y cracklib-runtime
 update-cracklib || true
-
-

@@ -1,0 +1,16 @@
+// Managed by fisma-noble harden job. Security pocket ONLY -- do not add
+// ${distro_id}:${distro_codename}-updates or -backports here; this
+// release's baseline is validated against -security only.
+// See 05 References/BOSH/0003-enable-unattended-security-upgrades-harden-boshrelease.md
+Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}-security";
+};
+
+// Do not auto-reboot. A reboot changes the running kernel/services outside
+// of a BOSH-tracked deploy/recreate. Kernel-class fixes remain a
+// "System Restart Required" Nessus Info finding until the next
+// deploy/recreate cycle -- this is a known, accepted residual.
+Unattended-Upgrade::Automatic-Reboot "false";
+
+// Keep logs -- this is the audit trail for SI-2 evidence.
+Unattended-Upgrade::SyslogEnable "true";

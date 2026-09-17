@@ -30,7 +30,6 @@ chown root:root /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
 ###
 # Continuous security-only patching (persists remediation of future USN/CVE
 # advisories without a new fisma-noble release per CVE).
-# See 05 References/BOSH/0003-enable-unattended-security-upgrades-harden-boshrelease.md
 ###
 
 mkdir -p /etc/apt/apt.conf.d
@@ -387,7 +386,6 @@ update-cracklib || true
 # Continuous security-only patching, part 2: install unattended-upgrades and
 # enable its timers. Config dropped in earlier (51unattended-upgrades-security,
 # 20auto-upgrades) scopes it to the -security pocket only.
-# See 05 References/BOSH/0003-enable-unattended-security-upgrades-harden-boshrelease.md
 ###
 apt-get "${APT_CONFFILE_OPTS[@]}" install -y unattended-upgrades
 systemctl enable --now apt-daily.timer apt-daily-upgrade.timer

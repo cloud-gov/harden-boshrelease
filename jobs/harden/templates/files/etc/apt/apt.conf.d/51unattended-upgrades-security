@@ -1,7 +1,6 @@
 // Managed by fisma-noble harden job. Security pocket ONLY -- do not add
 // ${distro_id}:${distro_codename}-updates or -backports here; this
 // release's baseline is validated against -security only.
-// See 05 References/BOSH/0003-enable-unattended-security-upgrades-harden-boshrelease.md
 Unattended-Upgrade::Allowed-Origins {
     "${distro_id}:${distro_codename}-security";
 };

@@ -28,6 +28,17 @@ chmod 0644 /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
 chown root:root /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
 
 ###
+# Continuous security-only patching (persists remediation of future USN/CVE
+# advisories without a new fisma-noble release per CVE).
+###
+
+mkdir -p /etc/apt/apt.conf.d
+cp etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/51unattended-upgrades-security
+cp etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades
+chmod 0644 /etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/20auto-upgrades
+chown root:root /etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/20auto-upgrades
+
+###
 # /etc/modprobe.d Safe Defaults
 # See https://github.com/18F/ubuntu/blob/master/hardening.md
 ###
@@ -147,6 +158,17 @@ done
 
 apt-get update
 apt-get "${APT_CONFFILE_OPTS[@]}" install --only-upgrade -y libpam-pwquality
+
+###
+# One-time upgrade for currently-known CVEs (2026-09-17 Nessus scan:
+# USN-8744-1 python, USN-8721-1 openssh, USN-8720-1 gnupg). Persistent
+# remediation for FUTURE advisories is unattended-upgrades (below); this
+# block only closes what was already open at the time of this change.
+###
+apt-get "${APT_CONFFILE_OPTS[@]}" install --only-upgrade -y \
+  openssh-client openssh-server openssh-sftp-server \
+  gpg gpg-agent gpgconf gpgv \
+  python3.12 python3.12-minimal libpython3.12-minimal libpython3.12-stdlib libpython3.12t64
 
 cp etc/pam.d/common-password /etc/pam.d/common-password
 cp etc/pam.d/common-auth /etc/pam.d/common-auth
@@ -359,3 +381,11 @@ fi
 # install and update cracklib to support the new pam_pwquality
 apt-get "${APT_CONFFILE_OPTS[@]}" install -y cracklib-runtime
 update-cracklib || true
+
+###
+# Continuous security-only patching, part 2: install unattended-upgrades and
+# enable its timers. Config dropped in earlier (51unattended-upgrades-security,
+# 20auto-upgrades) scopes it to the -security pocket only.
+###
+apt-get "${APT_CONFFILE_OPTS[@]}" install -y unattended-upgrades
+systemctl enable --now apt-daily.timer apt-daily-upgrade.timer

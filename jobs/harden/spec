@@ -4,6 +4,8 @@ templates:
   .placeholder: .placeholder
   bin/post-deploy: bin/post-deploy
   files/etc/apt/sources.list.d/aws-ubuntu-mirrors.list: files/etc/apt/sources.list.d/aws-ubuntu-mirrors.list
+  files/etc/apt/apt.conf.d/51unattended-upgrades-security: files/etc/apt/apt.conf.d/51unattended-upgrades-security
+  files/etc/apt/apt.conf.d/20auto-upgrades: files/etc/apt/apt.conf.d/20auto-upgrades
   files/etc/securetty: files/etc/securetty
   files/etc/security/limits.conf: files/etc/security/limits.conf
   files/etc/security/pwquality.conf: files/etc/security/pwquality.conf

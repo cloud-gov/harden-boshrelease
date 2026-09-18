@@ -23,5 +23,3 @@ Unattended-Upgrade::Package-Blacklist {
     "cracklib-runtime";   // e.g. if you need to control exactly when the dictionary rebuilds};
 }
 ```
-There is an empty Package-Blacklist block (commented example included) so 
-the persistent mechanism stays on with a low-friction escape hatch. 

@@ -13,3 +13,15 @@ Unattended-Upgrade::Automatic-Reboot "false";
 
 // Keep logs -- this is the audit trail for SI-2 evidence.
 Unattended-Upgrade::SyslogEnable "true";
+
+// Pin-safety: packages listed here are NEVER auto-upgraded by this
+// mechanism, even if a -security fix is available. A real APT pin
+// (/etc/apt/preferences.d/) already takes precedence over unattended-upgrades
+// with no extra config -- this list is for cases where you want an upgrade
+// to require an explicit human/release decision without setting up a full
+// pin-priority file. Empty by default; add package names as needed, e.g.:
+// Unattended-Upgrade::Package-Blacklist {
+//     "openssh-server";
+// };
+Unattended-Upgrade::Package-Blacklist {
+};

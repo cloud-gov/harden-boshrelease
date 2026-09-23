@@ -3,5 +3,6 @@ set -e
 
 echo "---> Starting hardening process"
 
-usg fix disa_stig
-usg audit
+usg fix disa_stig --tailoring-file files/tailor.xml
+
+echo "---> Hardening process finished"

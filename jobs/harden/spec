@@ -24,5 +24,6 @@ templates:
   files/etc/bash.bashrc: files/etc/bash.bashrc
   files/etc/sysctl.conf: files/etc/sysctl.conf
   files/etc/login.defs: files/etc/login.defs
+  files/tailor.xml: files/tailor.xml
 packages: []
 properties: {}

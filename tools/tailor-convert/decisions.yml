@@ -1,0 +1,315 @@
+# decisions.yml
+#
+# Environment-specific overrides applied on top of a "gold" XCCDF Tailoring
+# file (the output of `usg generate-tailoring disa_stig tailor.xml` for
+# whichever Ubuntu release/benchmark is in play).
+#
+# This file is intentionally keyed by ComplianceAsCode *rule name* (the
+# short name after `xccdf_org.ssgproject.content_rule_` / `..._value_`)
+# rather than by the numeric UBTU-XX-NNNNNN STIG control ID. Control IDs are
+# renumbered between STIG releases (e.g. 22.04 V1R1 -> V2R8, and again for
+# the eventual 24.04/Noble benchmark), but the underlying rule names in
+# ComplianceAsCode are far more stable across product versions. Keying here
+# means this file mostly just works when the source tailoring file is
+# regenerated against a newer benchmark -- see README.md for the process.
+#
+# Each entry:
+#   rule:      ComplianceAsCode rule name (without the xccdf_org.ssgproject.* prefix)
+#   action:    disable | set-value | accept
+#   value:     required when action is set-value
+#   stig_ids:  UBTU-XX-NNNNNN id(s) this maps to in the source benchmark, for
+#              traceability back to the STIG checklist / ckl comments. Purely
+#              informational -- matching is done by rule name.
+#   rationale: human-readable justification, becomes an XML comment in the
+#              generated tailor.xml directly above the affected <select>/
+#              <set-value> element.
+#
+# action: accept means "do nothing" -- the rule is left exactly as selected
+# in the gold tailoring file. These entries exist for traceability (so the
+# ckl finding is not silently forgotten) even though no override is needed.
+
+decisions:
+
+  # --- Log file / directory ownership and permissions needed by vcap/sysstat ---
+  - rule: file_permissions_var_log
+    action: disable
+    stig_ids: [UBTU-22-232025]
+    rationale: >-
+      Group "vcap" requires write permission on /var/log. Forcing mode 0755
+      breaks BOSH job log writes.
+
+  - rule: permissions_local_var_log
+    action: disable
+    stig_ids: [UBTU-22-232026]
+    rationale: >-
+      File /var/log/sysstat/sa<Number> has group write and global read for
+      sysstat's system activity report (sar) to function.
+
+  - rule: file_groupowner_var_log_syslog
+    action: disable
+    stig_ids: [UBTU-22-232135]
+    rationale: >-
+      /var/log/syslog is intentionally group-owned by "syslog" (not "adm")
+      on this platform.
+
+  # --- Firewall: ASGs + perimeter firewalls + iptables replace ufw ---
+  - rule: package_ufw_installed
+    action: disable
+    stig_ids: [UBTU-22-251010]
+    rationale: >-
+      Because IP addresses are dynamic in TAS, ufw cannot be used to limit
+      traffic between hosts. Application Security Groups (ASGs) and
+      perimeter firewalls for the TAS subnet are used instead; iptables is
+      used directly where necessary.
+
+  - rule: check_ufw_active
+    action: disable
+    stig_ids: [UBTU-22-251015]
+    rationale: >-
+      See package_ufw_installed above -- ufw is not part of this
+      architecture's network control model.
+
+  - rule: service_ufw_enabled
+    action: disable
+    stig_ids: [UBTU-22-251020]
+    rationale: >-
+      See package_ufw_installed above -- ufw is not part of this
+      architecture's network control model.
+
+  - rule: ufw_rate_limit
+    action: disable
+    stig_ids: [UBTU-22-251025]
+    rationale: >-
+      Depends on ufw being in use; not applicable given the ASG/iptables
+      model (see package_ufw_installed).
+
+  - rule: ufw_only_required_services
+    action: disable
+    stig_ids: [UBTU-22-251030]
+    rationale: >-
+      Depends on ufw being in use; not applicable given the ASG/iptables
+      model (see package_ufw_installed).
+
+  # --- Password complexity: enforced via pam_cracklib in common-password ---
+  - rule: package_pam_pwquality_installed
+    action: disable
+    stig_ids: [UBTU-22-215010]
+    rationale: >-
+      Stemcell uses pam_cracklib.so (via /etc/pam.d/common-password) to
+      enforce password complexity, not libpam-pwquality. Additionally, BOSH
+      SSH users are ephemeral and use key-based login, not password-based
+      login.
+
+  - rule: accounts_password_pam_dictcheck
+    action: disable
+    stig_ids: [UBTU-22-611030]
+    rationale: >-
+      Dictionary-word rejection is configured in /etc/pam.d/common-password
+      via pam_cracklib, not /etc/security/pwquality.conf.
+
+  - rule: accounts_password_pam_minlen
+    action: disable
+    stig_ids: [UBTU-22-611035]
+    rationale: >-
+      Minimum password length is configured in /etc/pam.d/common-password
+      via pam_cracklib, not /etc/security/pwquality.conf.
+
+  # --- Chrony maxpoll: already fixed at value 16 in gold tailoring ---
+  - rule: chronyd_or_ntpd_set_maxpoll
+    action: accept
+    stig_ids: [UBTU-22-252010]
+    rationale: >-
+      Gold tailoring already sets var_time_service_set_maxpoll=16
+      (down from the chrony.conf package default of 10). The ckl "Open"
+      finding predates this fix; no further action needed.
+
+  # --- umask 077 breaks runC container runtime ---
+  - rule: accounts_umask_etc_login_defs
+    action: disable
+    stig_ids: [UBTU-22-412035]
+    rationale: >-
+      This harden job is applied broadly across BOSH-deployed VM types,
+      including compute/diego cells that run the runC container runtime,
+      which requires umask 022 to function. Forcing 077 in /etc/login.defs
+      breaks container creation.
+
+  # --- Passwordless sudo is core to the BOSH SSH access model ---
+  - rule: sudo_require_authentication
+    action: disable
+    stig_ids: [UBTU-22-432010]
+    rationale: >-
+      BOSH SSH uses key-based login; ssh users are granted passwordless
+      sudo by design. Forcing sudo reauthentication breaks the BOSH SSH
+      access model. (UBTU-22-432015 / ensure_sudo_group_restricted is
+      unaffected and remains enabled.)
+
+  # --- AIDE / file integrity: owned by the separate aide-boshrelease ---
+  - rule: package_aide_installed
+    action: disable
+    stig_ids: [UBTU-22-651010]
+    rationale: >-
+      AIDE installation and configuration is owned by the separate
+      aide-boshrelease deployed alongside this release. Managing it here
+      too would cause the two releases to fight over the same
+      configuration.
+
+  - rule: aide_build_database
+    action: disable
+    stig_ids: [UBTU-22-651015]
+    rationale: "See package_aide_installed -- AIDE lifecycle owned by aide-boshrelease."
+
+  - rule: aide_disable_silentreports
+    action: disable
+    stig_ids: [UBTU-22-651020]
+    rationale: "See package_aide_installed -- AIDE lifecycle owned by aide-boshrelease."
+
+  - rule: aide_periodic_cron_checking
+    action: disable
+    stig_ids: [UBTU-22-651025]
+    rationale: "See package_aide_installed -- AIDE lifecycle owned by aide-boshrelease."
+
+  - rule: aide_check_audit_tools
+    action: disable
+    stig_ids: [UBTU-22-651030]
+    rationale: "See package_aide_installed -- AIDE lifecycle owned by aide-boshrelease."
+
+  - rule: auditd_audispd_configure_remote_server
+    action: disable
+    stig_ids: [UBTU-22-653020]
+    rationale: >-
+      Audit event multiplexor (audispd) is not installed on stemcells.
+      Log forwarding to a remote syslog ingestor is handled outside this
+      job (see aide-boshrelease / centralized logging).
+
+  - rule: package_audit-audispd-plugins_installed
+    action: disable
+    stig_ids: [UBTU-22-653020]
+    rationale: "See auditd_audispd_configure_remote_server above."
+
+  - rule: auditd_audispd_configure_sufficiently_large_partition
+    action: disable
+    stig_ids: [UBTU-22-653035]
+    rationale: >-
+      Because BOSH-deployed VMs are ephemeral, logs are forwarded to a
+      remote syslog ingestor rather than retained locally at volume.
+
+  # --- DOD PKI / smart-card MFA: not supported on stemcells ---
+  - rule: only_allow_dod_certs
+    action: disable
+    stig_ids: [UBTU-22-631010]
+    rationale: >-
+      No DOD PKI / smart-card authentication path exists on BOSH stemcells;
+      SSH access is key-based, not certificate-based via DOD-issued CAs.
+
+  - rule: sssd_offline_cred_expiration
+    action: disable
+    stig_ids: [UBTU-22-631015]
+    rationale: >-
+      Only applicable if smart card authentication is in use. Stemcells do
+      not support multifactor authentication.
+
+  - rule: install_smartcard_packages
+    action: disable
+    stig_ids: [UBTU-22-612010]
+    rationale: "Stemcells do not support multifactor authentication."
+
+  - rule: package_opensc_installed
+    action: disable
+    stig_ids: [UBTU-22-612015]
+    rationale: "Stemcells do not support multifactor authentication."
+
+  - rule: smartcard_pam_enabled
+    action: disable
+    stig_ids: [UBTU-22-612020]
+    rationale: >-
+      Stemcells do not support multifactor authentication.
+      sshd_enable_pubkey_auth (also selected under UBTU-22-612020 in the
+      gold tailoring file) remains enabled -- BOSH SSH access depends on
+      SSH public-key authentication independent of smart-card MFA.
+
+  - rule: smartcard_configure_cert_checking
+    action: disable
+    stig_ids: [UBTU-22-612025]
+    rationale: "Stemcells do not support multifactor authentication."
+
+  - rule: smartcard_configure_ca
+    action: disable
+    stig_ids: [UBTU-22-612030]
+    rationale: "Stemcells do not support multifactor authentication."
+
+  - rule: smartcard_configure_crl
+    action: disable
+    stig_ids: [UBTU-22-612035]
+    rationale: "Stemcells do not support multifactor authentication."
+
+  - rule: verify_use_mappers
+    action: disable
+    stig_ids: [UBTU-22-612040]
+    rationale: "Stemcells do not support multifactor authentication."
+
+  # --- GNOME/GUI: stemcells have no graphical desktop installed ---
+  - rule: dconf_gnome_banner_enabled
+    action: disable
+    stig_ids: [UBTU-22-271010]
+    rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
+
+  - rule: dconf_gnome_login_banner_text
+    action: disable
+    stig_ids: [UBTU-22-271015]
+    rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
+
+  - rule: dconf_gnome_screensaver_lock_enabled
+    action: disable
+    stig_ids: [UBTU-22-271020]
+    rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
+
+  - rule: dconf_gnome_screensaver_idle_delay
+    action: disable
+    stig_ids: [UBTU-22-271025]
+    rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
+
+  - rule: dconf_gnome_screensaver_lock_delay
+    action: disable
+    stig_ids: [UBTU-22-271025]
+    rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
+
+  - rule: dconf_gnome_disable_ctrlaltdel_reboot
+    action: disable
+    stig_ids: [UBTU-22-271030]
+    rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
+
+  # --- Misc no-ops / IaaS-handled items ---
+  - rule: wireless_disable_interfaces
+    action: disable
+    stig_ids: [UBTU-22-291015]
+    rationale: >-
+      Not applicable: the system has no physical wireless network radios
+      present.
+
+  - rule: account_temp_expire_date
+    action: disable
+    stig_ids: [UBTU-22-411040]
+    rationale: "Stemcells do not have temporary accounts."
+
+  - rule: vlock_installed
+    action: disable
+    stig_ids: [UBTU-22-412025]
+    rationale: >-
+      A session lock is a temporary action for a user stepping away from
+      an interactive terminal; not applicable to ephemeral, non-interactive
+      BOSH-deployed VMs.
+
+  - rule: audit_rules_execution_chacl
+    action: disable
+    stig_ids: [UBTU-22-654015]
+    rationale: "File /usr/bin/chacl does not exist on stemcells."
+
+  - rule: audit_rules_execution_setfacl
+    action: disable
+    stig_ids: [UBTU-22-654085]
+    rationale: "File /usr/bin/setfacl does not exist on stemcells."
+
+  - rule: encrypt_partitions
+    action: disable
+    stig_ids: [UBTU-22-231010]
+    rationale: "Disk encryption is handled by the IaaS."

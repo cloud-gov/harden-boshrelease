@@ -25,7 +25,7 @@
     <!--UBTU-22-214015: Ubuntu 22.04 LTS must be configured so that the Advance Package Tool (APT) removes all software components after updated versions have been installed.-->
     <select idref="xccdf_org.ssgproject.content_rule_clean_components_post_updating" selected="true"/>
     <!--UBTU-22-215010: Ubuntu 22.04 LTS must have the "libpam-pwquality" package installed.-->
-    <!-- decisions.yml override [UBTU-22-215010]: Stemcell uses pam_cracklib.so (via /etc/pam.d/common-password) to enforce password complexity, not libpam-pwquality. Additionally, BOSH SSH users are ephemeral and use key-based login, not password-based login. --><select idref="xccdf_org.ssgproject.content_rule_package_pam_pwquality_installed" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_pam_pwquality_installed" selected="true"/>
     <!--UBTU-22-215015: Ubuntu 22.04 LTS must have the "chrony" package installed.-->
     <select idref="xccdf_org.ssgproject.content_rule_package_chrony_installed" selected="true"/>
     <!--UBTU-22-215020: Ubuntu 22.04 LTS must not have the "systemd-timesyncd" package installed.-->
@@ -37,7 +37,7 @@
     <!--UBTU-22-215035: Ubuntu 22.04 LTS must not have the "telnet" package installed.-->
     <select idref="xccdf_org.ssgproject.content_rule_package_telnetd_removed" selected="true"/>
     <!--UBTU-22-231010: Ubuntu 22.04 LTS must implement cryptographic mechanisms to prevent unauthorized disclosure and modification of all information that requires protection at rest.-->
-    <!-- decisions.yml override [UBTU-22-231010]: Disk encryption is handled by the IaaS. --><select idref="xccdf_org.ssgproject.content_rule_encrypt_partitions" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_encrypt_partitions" selected="true"/>
     <!--UBTU-22-232010: Ubuntu 22.04 LTS must have directories that contain system commands set to a mode of "755" or less permissive.-->
     <select idref="xccdf_org.ssgproject.content_rule_dir_permissions_binary_dirs" selected="true"/>
     <!--UBTU-22-232015: Ubuntu 22.04 LTS must have system commands set to a mode of "755" or less permissive.-->
@@ -45,9 +45,9 @@
     <!--UBTU-22-232020: Ubuntu 22.04 LTS library files must have mode "755" or less permissive.-->
     <select idref="xccdf_org.ssgproject.content_rule_file_permissions_library_dirs" selected="true"/>
     <!--UBTU-22-232025: Ubuntu 22.04 LTS must configure the "/var/log" directory to have mode "755" or less permissive.-->
-    <!-- decisions.yml override [UBTU-22-232025]: Group "vcap" requires write permission on /var/log. Forcing mode 0755 breaks BOSH job log writes. --><select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log" selected="true"/>
     <!--UBTU-22-232026: Ubuntu 22.04 LTS must generate error messages that provide information necessary for corrective actions without revealing information that could be exploited by adversaries.-->
-    <!-- decisions.yml override [UBTU-22-232026]: File /var/log/sysstat/sa<Number> has group write and global read for sysstat's system activity report (sar) to function. --><select idref="xccdf_org.ssgproject.content_rule_permissions_local_var_log" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_permissions_local_var_log" selected="true"/>
     <!--UBTU-22-232027: Ubuntu 22.04 LTS must generate system journal entries without revealing information that could be exploited by adversaries.-->
     <select idref="xccdf_org.ssgproject.content_rule_dir_permissions_system_journal" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_permissions_system_journal" selected="true"/>
@@ -92,21 +92,21 @@
     <!--UBTU-22-232130: Ubuntu 22.04 LTS must configure "/var/log/syslog" file to be owned by "syslog".-->
     <select idref="xccdf_org.ssgproject.content_rule_file_owner_var_log_syslog" selected="true"/>
     <!--UBTU-22-232135: Ubuntu 22.04 LTS must configure the "/var/log/syslog" file to be group-owned by "adm".-->
-    <!-- decisions.yml override [UBTU-22-232135]: /var/log/syslog is intentionally group-owned by "syslog" (not "adm") on this platform. --><select idref="xccdf_org.ssgproject.content_rule_file_groupowner_var_log_syslog" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_var_log_syslog" selected="true"/>
     <!--UBTU-22-232140: Ubuntu 22.04 LTS must be configured so that the "journalctl" command is not accessible by unauthorized users.-->
     <select idref="xccdf_org.ssgproject.content_rule_file_permissions_journalctl" selected="true"/>
     <!--UBTU-22-232145: Ubuntu 22.04 LTS must set a sticky bit on all public directories to prevent unauthorized and unintended information transferred via shared system resources.-->
     <select idref="xccdf_org.ssgproject.content_rule_dir_perms_world_writable_sticky_bits" selected="true"/>
     <!--UBTU-22-251010: Ubuntu 22.04 LTS must have an application firewall installed in order to control remote access methods.-->
-    <!-- decisions.yml override [UBTU-22-251010]: Because IP addresses are dynamic in TAS, ufw cannot be used to limit traffic between hosts. Application Security Groups (ASGs) and perimeter firewalls for the TAS subnet are used instead; iptables is used directly where necessary. --><select idref="xccdf_org.ssgproject.content_rule_package_ufw_installed" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_ufw_installed" selected="true"/>
     <!--UBTU-22-251015: Ubuntu 22.04 LTS must enable and run the Uncomplicated Firewall (ufw).-->
-    <!-- decisions.yml override [UBTU-22-251015]: See package_ufw_installed above - ufw is not part of this architecture's network control model. --><select idref="xccdf_org.ssgproject.content_rule_check_ufw_active" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_check_ufw_active" selected="true"/>
     <!--UBTU-22-251020: Ubuntu 22.04 LTS must have an application firewall enabled.-->
-    <!-- decisions.yml override [UBTU-22-251020]: See package_ufw_installed above - ufw is not part of this architecture's network control model. --><select idref="xccdf_org.ssgproject.content_rule_service_ufw_enabled" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_ufw_enabled" selected="true"/>
     <!--UBTU-22-251025: Ubuntu 22.04 LTS must configure the Uncomplicated Firewall (ufw) to rate-limit impacted network interfaces.-->
-    <!-- decisions.yml override [UBTU-22-251025]: Depends on ufw being in use; not applicable given the ASG/iptables model (see package_ufw_installed). --><select idref="xccdf_org.ssgproject.content_rule_ufw_rate_limit" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_ufw_rate_limit" selected="true"/>
     <!--UBTU-22-251030: Ubuntu 22.04 LTS must be configured to prohibit or restrict the use of functions, ports, protocols, and/or services, as defined in the PPSM CAL and vulnerability assessments.-->
-    <!-- decisions.yml override [UBTU-22-251030]: Depends on ufw being in use; not applicable given the ASG/iptables model (see package_ufw_installed). --><select idref="xccdf_org.ssgproject.content_rule_ufw_only_required_services" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_ufw_only_required_services" selected="true"/>
     <!--UBTU-22-252010: Ubuntu 22.04 LTS must, for networked systems, compare internal information system clocks at least every 24 hours with a server synchronized to one of the redundant United States Naval Observatory (USNO) time servers, or a time server designated for the appropriate DOD network (NIPRNet/SIPRNet), and/or the Global Positioning System (GPS).-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_time_service_set_maxpoll">16</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_chronyd_or_ntpd_set_maxpoll" selected="true"/>
@@ -147,23 +147,23 @@
     <!--UBTU-22-255065: Ubuntu 22.04 LTS must use strong authenticators in establishing nonlocal maintenance and diagnostic sessions.-->
     <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_pam" selected="true"/>
     <!--UBTU-22-271010: Ubuntu 22.04 LTS must enable the graphical user logon banner to display the Standard Mandatory DOD Notice and Consent Banner before granting local access to the system via a graphical user logon.-->
-    <!-- decisions.yml override [UBTU-22-271010]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_banner_enabled" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_banner_enabled" selected="true"/>
     <!--UBTU-22-271015: Ubuntu 22.04 LTS must display the Standard Mandatory DOD Notice and Consent Banner before granting local access to the system via a graphical user logon.-->
     <set-value idref="xccdf_org.ssgproject.content_value_login_banner_text">^(You[\s\n]+are[\s\n]+accessing[\s\n]+a[\s\n]+U\.S\.[\s\n]+Government[\s\n]+\(USG\)[\s\n]+Information[\s\n]+System[\s\n]+\(IS\)[\s\n]+that[\s\n]+is[\s\n]+provided[\s\n]+for[\s\n]+USG\-authorized[\s\n]+use[\s\n]+only\.[\s\n]+By[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+\(which[\s\n]+includes[\s\n]+any[\s\n]+device[\s\n]+attached[\s\n]+to[\s\n]+this[\s\n]+IS\),[\s\n]+you[\s\n]+consent[\s\n]+to[\s\n]+the[\s\n]+following[\s\n]+conditions\:(?:[\n]+|(?:\\n)+)\-The[\s\n]+USG[\s\n]+routinely[\s\n]+intercepts[\s\n]+and[\s\n]+monitors[\s\n]+communications[\s\n]+on[\s\n]+this[\s\n]+IS[\s\n]+for[\s\n]+purposes[\s\n]+including,[\s\n]+but[\s\n]+not[\s\n]+limited[\s\n]+to,[\s\n]+penetration[\s\n]+testing,[\s\n]+COMSEC[\s\n]+monitoring,[\s\n]+network[\s\n]+operations[\s\n]+and[\s\n]+defense,[\s\n]+personnel[\s\n]+misconduct[\s\n]+\(PM\),[\s\n]+law[\s\n]+enforcement[\s\n]+\(LE\),[\s\n]+and[\s\n]+counterintelligence[\s\n]+\(CI\)[\s\n]+investigations\.(?:[\n]+|(?:\\n)+)\-At[\s\n]+any[\s\n]+time,[\s\n]+the[\s\n]+USG[\s\n]+may[\s\n]+inspect[\s\n]+and[\s\n]+seize[\s\n]+data[\s\n]+stored[\s\n]+on[\s\n]+this[\s\n]+IS\.(?:[\n]+|(?:\\n)+)\-Communications[\s\n]+using,[\s\n]+or[\s\n]+data[\s\n]+stored[\s\n]+on,[\s\n]+this[\s\n]+IS[\s\n]+are[\s\n]+not[\s\n]+private,[\s\n]+are[\s\n]+subject[\s\n]+to[\s\n]+routine[\s\n]+monitoring,[\s\n]+interception,[\s\n]+and[\s\n]+search,[\s\n]+and[\s\n]+may[\s\n]+be[\s\n]+disclosed[\s\n]+or[\s\n]+used[\s\n]+for[\s\n]+any[\s\n]+USG\-authorized[\s\n]+purpose\.(?:[\n]+|(?:\\n)+)\-This[\s\n]+IS[\s\n]+includes[\s\n]+security[\s\n]+measures[\s\n]+\(e\.g\.,[\s\n]+authentication[\s\n]+and[\s\n]+access[\s\n]+controls\)[\s\n]+to[\s\n]+protect[\s\n]+USG[\s\n]+interests\-\-not[\s\n]+for[\s\n]+your[\s\n]+personal[\s\n]+benefit[\s\n]+or[\s\n]+privacy\.(?:[\n]+|(?:\\n)+)\-Notwithstanding[\s\n]+the[\s\n]+above,[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+does[\s\n]+not[\s\n]+constitute[\s\n]+consent[\s\n]+to[\s\n]+PM,[\s\n]+LE[\s\n]+or[\s\n]+CI[\s\n]+investigative[\s\n]+searching[\s\n]+or[\s\n]+monitoring[\s\n]+of[\s\n]+the[\s\n]+content[\s\n]+of[\s\n]+privileged[\s\n]+communications,[\s\n]+or[\s\n]+work[\s\n]+product,[\s\n]+related[\s\n]+to[\s\n]+personal[\s\n]+representation[\s\n]+or[\s\n]+services[\s\n]+by[\s\n]+attorneys,[\s\n]+psychotherapists,[\s\n]+or[\s\n]+clergy,[\s\n]+and[\s\n]+their[\s\n]+assistants\.[\s\n]+Such[\s\n]+communications[\s\n]+and[\s\n]+work[\s\n]+product[\s\n]+are[\s\n]+private[\s\n]+and[\s\n]+confidential\.[\s\n]+See[\s\n]+User[\s\n]+Agreement[\s\n]+for[\s\n]+details\.|I've[\s\n]+read[\s\n]+\&amp;[\s\n]+consent[\s\n]+to[\s\n]+terms[\s\n]+in[\s\n]+IS[\s\n]+user[\s\n]+agreem't\.)$</set-value>
-    <!-- decisions.yml override [UBTU-22-271015]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_login_banner_text" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_login_banner_text" selected="true"/>
     <!--UBTU-22-271020: Ubuntu 22.04 LTS must retain a user's session lock until that user reestablishes access using established identification and authentication procedures.-->
-    <!-- decisions.yml override [UBTU-22-271020]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_enabled" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_enabled" selected="true"/>
     <!--UBTU-22-271025: Ubuntu 22.04 LTS must initiate a graphical session lock after 15 minutes of inactivity.-->
     <set-value idref="xccdf_org.ssgproject.content_value_inactivity_timeout_value">900</set-value>
     <set-value idref="xccdf_org.ssgproject.content_value_var_screensaver_lock_delay">0</set-value>
-    <!-- decisions.yml override [UBTU-22-271025]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_idle_delay" selected="false"/>
-    <!-- decisions.yml override [UBTU-22-271025]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_delay" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_idle_delay" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_delay" selected="true"/>
     <!--UBTU-22-271030: Ubuntu 22.04 LTS must disable the x86 Ctrl-Alt-Delete key sequence if a graphical user interface is installed.-->
-    <!-- decisions.yml override [UBTU-22-271030]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_disable_ctrlaltdel_reboot" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_disable_ctrlaltdel_reboot" selected="true"/>
     <!--UBTU-22-291010: Ubuntu 22.04 LTS must disable automatic mounting of Universal Serial Bus (USB) mass storage driver.-->
     <select idref="xccdf_org.ssgproject.content_rule_kernel_module_usb-storage_disabled" selected="true"/>
     <!--UBTU-22-291015: Ubuntu 22.04 LTS must disable all wireless network adapters.-->
-    <!-- decisions.yml override [UBTU-22-291015]: Not applicable: the system has no physical wireless network radios present. --><select idref="xccdf_org.ssgproject.content_rule_wireless_disable_interfaces" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_wireless_disable_interfaces" selected="true"/>
     <!--UBTU-22-411010: Ubuntu 22.04 LTS must prevent direct login into the root account.-->
     <select idref="xccdf_org.ssgproject.content_rule_prevent_direct_root_logins" selected="true"/>
     <!--UBTU-22-411015: Ubuntu 22.04 LTS must uniquely identify interactive users.-->
@@ -177,7 +177,7 @@
     <!--UBTU-22-411035: Ubuntu 22.04 LTS must disable account identifiers (individuals, groups, roles, and devices) after 35 days of inactivity.-->
     <select idref="xccdf_org.ssgproject.content_rule_account_disable_post_pw_expiration" selected="true"/>
     <!--UBTU-22-411040: Ubuntu 22.04 LTS must automatically expire temporary accounts within 72 hours.-->
-    <!-- decisions.yml override [UBTU-22-411040]: Stemcells do not have temporary accounts. --><select idref="xccdf_org.ssgproject.content_rule_account_temp_expire_date" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_account_temp_expire_date" selected="true"/>
     <!--UBTU-22-411045: Ubuntu 22.04 LTS must automatically lock an account until the locked account is released by an administrator when three unsuccessful logon attempts have been made.-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_passwords_pam_faillock_deny">3</set-value>
     <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_passwords_pam_faillock_fail_interval">900</set-value>
@@ -194,19 +194,19 @@
     <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_max_concurrent_login_sessions">10</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions" selected="true"/>
     <!--UBTU-22-412025: Ubuntu 22.04 LTS must allow users to directly initiate a session lock for all connection types.-->
-    <!-- decisions.yml override [UBTU-22-412025]: A session lock is a temporary action for a user stepping away from an interactive terminal; not applicable to ephemeral, non-interactive BOSH-deployed VMs. --><select idref="xccdf_org.ssgproject.content_rule_vlock_installed" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_vlock_installed" selected="true"/>
     <!--UBTU-22-412030: Ubuntu 22.04 LTS must automatically exit interactive command shell user sessions after 15 minutes of inactivity.-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_tmout">900</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_accounts_tmout" selected="true"/>
     <!--UBTU-22-412035: Ubuntu 22.04 LTS default filesystem permissions must be defined in such a way that all authenticated users can read and modify only their own files.-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_user_umask">077</set-value>
-    <!-- decisions.yml override [UBTU-22-412035]: This harden job is applied broadly across BOSH-deployed VM types, including compute/diego cells that run the runC container runtime, which requires umask 022 to function. Forcing 077 in /etc/login.defs breaks container creation. --><select idref="xccdf_org.ssgproject.content_rule_accounts_umask_etc_login_defs" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_umask_etc_login_defs" selected="true"/>
     <!--UBTU-22-431010: Ubuntu 22.04 LTS must have the "apparmor" package installed.-->
     <select idref="xccdf_org.ssgproject.content_rule_package_apparmor_installed" selected="true"/>
     <!--UBTU-22-431015: Ubuntu 22.04 LTS must be configured to use AppArmor.-->
     <select idref="xccdf_org.ssgproject.content_rule_apparmor_configured" selected="true"/>
     <!--UBTU-22-432010: Ubuntu 22.04 LTS must require users to reauthenticate for privilege escalation or when changing roles.-->
-    <!-- decisions.yml override [UBTU-22-432010]: BOSH SSH uses key-based login; ssh users are granted passwordless sudo by design. Forcing sudo reauthentication breaks the BOSH SSH access model. (UBTU-22-432015 / ensure_sudo_group_restricted is unaffected and remains enabled.) --><select idref="xccdf_org.ssgproject.content_rule_sudo_require_authentication" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_sudo_require_authentication" selected="true"/>
     <!--UBTU-22-432015: Ubuntu 22.04 LTS must ensure only users who need access to security functions are part of sudo group.-->
     <select idref="xccdf_org.ssgproject.content_rule_ensure_sudo_group_restricted" selected="true"/>
     <!--UBTU-22-611010: Ubuntu 22.04 LTS must enforce password complexity by requiring at least one uppercase character be used.-->
@@ -223,10 +223,10 @@
     <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_ocredit" selected="true"/>
     <!--UBTU-22-611030: Ubuntu 22.04 LTS must prevent the use of dictionary words for passwords.-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_dictcheck">1</set-value>
-    <!-- decisions.yml override [UBTU-22-611030]: Dictionary-word rejection is configured in /etc/pam.d/common-password via pam_cracklib, not /etc/security/pwquality.conf. --><select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_dictcheck" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_dictcheck" selected="true"/>
     <!--UBTU-22-611035: Ubuntu 22.04 LTS must enforce a minimum 15-character password length.-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_minlen">15</set-value>
-    <!-- decisions.yml override [UBTU-22-611035]: Minimum password length is configured in /etc/pam.d/common-password via pam_cracklib, not /etc/security/pwquality.conf. --><select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_minlen" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_minlen" selected="true"/>
     <!--UBTU-22-611040: Ubuntu 22.04 LTS must require the change of at least eight characters when passwords are changed.-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_difok">8</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_difok" selected="true"/>
@@ -243,34 +243,34 @@
     <!--UBTU-22-611070: Ubuntu 22.04 LTS must encrypt all stored passwords with a FIPS 140-3-approved cryptographic hashing algorithm.-->
     <select idref="xccdf_org.ssgproject.content_rule_set_password_hashing_algorithm_logindefs" selected="true"/>
     <!--UBTU-22-612010: Ubuntu 22.04 LTS must implement multifactor authentication for remote access to privileged accounts in such a way that one of the factors is provided by a device separate from the system gaining access.-->
-    <!-- decisions.yml override [UBTU-22-612010]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_install_smartcard_packages" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_install_smartcard_packages" selected="true"/>
     <!--UBTU-22-612015: Ubuntu 22.04 LTS must accept personal identity verification (PIV) credentials.-->
-    <!-- decisions.yml override [UBTU-22-612015]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_package_opensc_installed" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_opensc_installed" selected="true"/>
     <!--UBTU-22-612020: Ubuntu 22.04 LTS must implement smart card logins for multifactor authentication for local and network access to privileged and nonprivileged accounts.-->
     <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_pubkey_auth" selected="true"/>
-    <!-- decisions.yml override [UBTU-22-612020]: Stemcells do not support multifactor authentication. sshd_enable_pubkey_auth (also selected under UBTU-22-612020 in the gold tailoring file) remains enabled - BOSH SSH access depends on SSH public-key authentication independent of smart-card MFA. --><select idref="xccdf_org.ssgproject.content_rule_smartcard_pam_enabled" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_smartcard_pam_enabled" selected="true"/>
     <!--UBTU-22-612025: Ubuntu 22.04 LTS must electronically verify personal identity verification (PIV) credentials.-->
-    <!-- decisions.yml override [UBTU-22-612025]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_cert_checking" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_cert_checking" selected="true"/>
     <!--UBTU-22-612030: Ubuntu 22.04 LTS, for PKI-based authentication, must validate certificates by constructing a certification path (which includes status information) to an accepted trust anchor.-->
-    <!-- decisions.yml override [UBTU-22-612030]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_ca" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_ca" selected="true"/>
     <!--UBTU-22-612035: Ubuntu 22.04 LTS for PKI-based authentication, must implement a local cache of revocation data in case of the inability to access revocation information via the network.-->
-    <!-- decisions.yml override [UBTU-22-612035]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_crl" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_crl" selected="true"/>
     <!--UBTU-22-612040: Ubuntu 22.04 LTS must map the authenticated identity to the user or group account for PKI-based authentication.-->
-    <!-- decisions.yml override [UBTU-22-612040]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_verify_use_mappers" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_verify_use_mappers" selected="true"/>
     <!--UBTU-22-631010: Ubuntu 22.04 LTS must use DOD PKI-established certificate authorities for verification of the establishment of protected sessions.-->
-    <!-- decisions.yml override [UBTU-22-631010]: No DOD PKI / smart-card authentication path exists on BOSH stemcells; SSH access is key-based, not certificate-based via DOD-issued CAs. --><select idref="xccdf_org.ssgproject.content_rule_only_allow_dod_certs" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_only_allow_dod_certs" selected="true"/>
     <!--UBTU-22-631015: Ubuntu 22.04 LTS must be configured such that Pluggable Authentication Module (PAM) prohibits the use of cached authentications after one day.-->
-    <!-- decisions.yml override [UBTU-22-631015]: Only applicable if smart card authentication is in use. Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_sssd_offline_cred_expiration" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_sssd_offline_cred_expiration" selected="true"/>
     <!--UBTU-22-651010: Ubuntu 22.04 LTS must use a file integrity tool to verify correct operation of all security functions.-->
-    <!-- decisions.yml override [UBTU-22-651010]: AIDE installation and configuration is owned by the separate aide-boshrelease deployed alongside this release. Managing it here too would cause the two releases to fight over the same configuration. --><select idref="xccdf_org.ssgproject.content_rule_package_aide_installed" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_aide_installed" selected="true"/>
     <!--UBTU-22-651015: Ubuntu 22.04 LTS must configure AIDE to perform file integrity checking on the file system.-->
-    <!-- decisions.yml override [UBTU-22-651015]: See package_aide_installed - AIDE lifecycle owned by aide-boshrelease. --><select idref="xccdf_org.ssgproject.content_rule_aide_build_database" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_aide_build_database" selected="true"/>
     <!--UBTU-22-651020: Ubuntu 22.04 LTS must notify designated personnel if baseline configurations are changed in an unauthorized manner. The file integrity tool must notify the system administrator when changes to the baseline configuration or anomalies in the operation of any security functions are discovered.-->
-    <!-- decisions.yml override [UBTU-22-651020]: See package_aide_installed - AIDE lifecycle owned by aide-boshrelease. --><select idref="xccdf_org.ssgproject.content_rule_aide_disable_silentreports" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_aide_disable_silentreports" selected="true"/>
     <!--UBTU-22-651025: Ubuntu 22.04 LTS must be configured so that the script that runs each 30 days or less to check file integrity is the default.-->
-    <!-- decisions.yml override [UBTU-22-651025]: See package_aide_installed - AIDE lifecycle owned by aide-boshrelease. --><select idref="xccdf_org.ssgproject.content_rule_aide_periodic_cron_checking" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_aide_periodic_cron_checking" selected="true"/>
     <!--UBTU-22-651030: Ubuntu 22.04 LTS must use cryptographic mechanisms to protect the integrity of audit tools.-->
-    <!-- decisions.yml override [UBTU-22-651030]: See package_aide_installed - AIDE lifecycle owned by aide-boshrelease. --><select idref="xccdf_org.ssgproject.content_rule_aide_check_audit_tools" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_aide_check_audit_tools" selected="true"/>
     <!--UBTU-22-651035: Ubuntu 22.04 LTS must have a crontab script running weekly to offload audit events of standalone systems.-->
     <select idref="xccdf_org.ssgproject.content_rule_auditd_offload_logs" selected="true"/>
     <!--UBTU-22-652010: Ubuntu 22.04 LTS must be configured to preserve log records from failure events.-->
@@ -282,8 +282,8 @@
     <!--UBTU-22-653015: Ubuntu 22.04 LTS must produce audit records and reports containing information to establish when, where, what type, the source, and the outcome for all DOD-defined auditable events and actions in near real time.-->
     <select idref="xccdf_org.ssgproject.content_rule_service_auditd_enabled" selected="true"/>
     <!--UBTU-22-653020: Ubuntu 22.04 LTS audit event multiplexor must be configured to offload audit logs onto a different system from the system being audited.-->
-    <!-- decisions.yml override [UBTU-22-653020]: Audit event multiplexor (audispd) is not installed on stemcells. Log forwarding to a remote syslog ingestor is handled outside this job (see aide-boshrelease / centralized logging). --><select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_remote_server" selected="false"/>
-    <!-- decisions.yml override [UBTU-22-653020]: See auditd_audispd_configure_remote_server above. --><select idref="xccdf_org.ssgproject.content_rule_package_audit-audispd-plugins_installed" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_remote_server" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_audit-audispd-plugins_installed" selected="true"/>
     <!--UBTU-22-653025: Ubuntu 22.04 LTS must alert the information system security officer (ISSO) and system administrator (SA) in the event of an audit processing failure.-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_auditd_action_mail_acct">root</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_auditd_data_retention_action_mail_acct" selected="true"/>
@@ -291,7 +291,7 @@
     <set-value idref="xccdf_org.ssgproject.content_value_var_auditd_disk_full_action">halt</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_auditd_data_disk_full_action" selected="true"/>
     <!--UBTU-22-653035: Ubuntu 22.04 LTS must allocate audit record storage capacity to store at least one weeks' worth of audit records, when audit records are not immediately sent to a central audit record storage facility.-->
-    <!-- decisions.yml override [UBTU-22-653035]: Because BOSH-deployed VMs are ephemeral, logs are forwarded to a remote syslog ingestor rather than retained locally at volume. --><select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_sufficiently_large_partition" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_sufficiently_large_partition" selected="true"/>
     <!--UBTU-22-653040: Ubuntu 22.04 LTS must immediately notify the system administrator (SA) and information system security officer (ISSO) when the audit record storage volume reaches 25 percent remaining of the allocated capacity.-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_auditd_space_left_percentage">25</set-value>
     <set-value idref="xccdf_org.ssgproject.content_value_var_auditd_space_left_action">email</set-value>
@@ -316,7 +316,7 @@
     <!--UBTU-22-654010: Ubuntu 22.04 LTS must generate audit records for successful/unsuccessful uses of the apparmor_parser command.-->
     <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_apparmor_parser" selected="true"/>
     <!--UBTU-22-654015: Ubuntu 22.04 LTS must generate audit records for successful/unsuccessful uses of the chacl command.-->
-    <!-- decisions.yml override [UBTU-22-654015]: File /usr/bin/chacl does not exist on stemcells. --><select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_chacl" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_chacl" selected="true"/>
     <!--UBTU-22-654020: Ubuntu 22.04 LTS must generate audit records for successful/unsuccessful uses of the chage command.-->
     <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_chage" selected="true"/>
     <!--UBTU-22-654025: Ubuntu 22.04 LTS must generate audit records for successful/unsuccessful uses of the chcon command.-->
@@ -344,7 +344,7 @@
     <!--UBTU-22-654080: Ubuntu 22.04 LTS must generate audit records for successful/unsuccessful uses of the passwd command.-->
     <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_passwd" selected="true"/>
     <!--UBTU-22-654085: Ubuntu 22.04 LTS must generate audit records for successful/unsuccessful uses of the setfacl command.-->
-    <!-- decisions.yml override [UBTU-22-654085]: File /usr/bin/setfacl does not exist on stemcells. --><select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_setfacl" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_setfacl" selected="true"/>
     <!--UBTU-22-654090: Ubuntu 22.04 LTS must generate audit records for successful/unsuccessful uses of the ssh-agent command.-->
     <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_ssh_agent" selected="true"/>
     <!--UBTU-22-654095: Ubuntu 22.04 LTS must generate audit records for successful/unsuccessful uses of the ssh-keysign command.-->

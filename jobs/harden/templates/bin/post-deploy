@@ -3,6 +3,6 @@ set -e
 
 echo "---> Starting hardening process"
 
-usg fix disa_stig --tailoring-file files/tailor.xml
+usg fix disa_stig --tailoring-file /var/vcap/jobs/harden/files/tailor.xml
 
 echo "---> Hardening process finished"

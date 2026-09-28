@@ -3,6 +3,97 @@ set -e
 
 echo "---> Starting hardening process"
 
-usg fix disa_stig --tailoring-file /var/vcap/jobs/harden/files/tailor.xml
+JOB_DIR=/var/vcap/jobs/harden
+
+# Make all apt/dpkg calls in this script non-interactive and force local
+# conffile changes (e.g. our /etc/issue banner) to win over package defaults
+# without prompting. Without this, any apt-get call below that pulls in a
+# package whose conffile we've customized (base-files -> /etc/issue, etc.)
+# will block forever waiting on a stdin prompt with no TTY attached, and the
+# post-deploy script will fail. See harden-boshrelease noble-main notes.
+export DEBIAN_FRONTEND=noninteractive
+APT_CONFFILE_OPTS=(-o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confdef")
+
+###
+# APT sources: the allow-listed mirrors. Required before any apt-get below --
+# ADR-0002 specifies cracklib-runtime must come from an allow-listed mirror
+# (us-gov-west-1 archive), not an arbitrary source (CM-7, supply chain).
+###
+
+cp "${JOB_DIR}/files/etc/apt/sources.list.d/aws-ubuntu-mirrors.list" /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
+chmod 0644 /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
+chown root:root /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
+
+###
+# Continuous security-only patching config. Must land BEFORE installing
+# unattended-upgrades below -- installing the package without this config
+# would enable automatic upgrades under distro defaults rather than the
+# -security-pocket-only scope this baseline is validated against.
+###
+
+mkdir -p /etc/apt/apt.conf.d
+cp "${JOB_DIR}/files/etc/apt/apt.conf.d/51unattended-upgrades-security" /etc/apt/apt.conf.d/51unattended-upgrades-security
+cp "${JOB_DIR}/files/etc/apt/apt.conf.d/20auto-upgrades" /etc/apt/apt.conf.d/20auto-upgrades
+chmod 0644 /etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/20auto-upgrades
+chown root:root /etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/20auto-upgrades
+
+apt-get update
+
+###
+# cracklib dictionary -- REQUIRED for pam_pwquality dictcheck.
+#
+# See ADR-0002 (0002-cracklib-runtime-required-harden-dependency-noble.md):
+# the Noble stemcell ships no cracklib, but pam_pwquality's dictcheck loads
+# /var/cache/cracklib/cracklib_dict.pwd. Without it the requisite pwquality
+# module fails and EVERY password change on the box fails with
+# "Authentication token manipulation error" -- promotion-blocking.
+#
+# This is NOT the removed libpam-cracklib PAM module (correctly gone in PAM
+# 1.5.0; this release uses the modern pam_pwquality). It is the separate
+# cracklib-runtime package that BUILDS the dictionary dictcheck needs.
+#
+# Must run BEFORE `usg fix` below, because the STIG tailoring leaves
+# accounts_password_pam_dictcheck enabled -- usg fix will write dictcheck=1
+# into pwquality.conf, so the dictionary has to already exist.
+# ADR-0002 explicitly REJECTED dictcheck=0 as a workaround.
+###
+
+apt-get "${APT_CONFFILE_OPTS[@]}" install -y cracklib-runtime
+update-cracklib || true
+
+###
+# Continuous security-only patching: install unattended-upgrades and enable
+# its timers. Config dropped in above scopes it to the -security pocket only.
+###
+
+apt-get "${APT_CONFFILE_OPTS[@]}" install -y unattended-upgrades
+systemctl enable --now apt-daily.timer apt-daily-upgrade.timer
+
+###
+# STIG remediation via Ubuntu Security Guide.
+#
+# No profile argument is given: usg rejects a positional profile when
+# --tailoring-file is supplied. The tailoring file itself declares the
+# benchmark channel (ubuntu2404_STIG_1) and the customized profile.
+#
+# The tailoring file is generated from tools/tailor-convert/ -- see
+# tools/tailor-convert/README.md. Do not hand-edit it.
+###
+echo "Job DIR is ${JOB_DIR}"
+usg fix --tailoring-file "${JOB_DIR}/files/tailor.xml"
+
+###
+# AIDE database refresh. AIDE itself is installed/managed by the separate
+# aide-boshrelease (which is why the AIDE STIG rules are disabled in the
+# tailoring file); this only refreshes its database after usg fix has
+# changed files on disk, so the next integrity check is not all noise.
+###
+
+if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then
+  echo "---> Updating AIDE db"
+  set +e # aide returns non-zero on db changes
+  /var/vcap/jobs/aide/bin/update-aide-db
+  set -e
+fi
 
 echo "---> Hardening process finished"

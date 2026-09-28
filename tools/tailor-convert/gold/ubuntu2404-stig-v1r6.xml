@@ -14,28 +14,28 @@
         <!--UBTU-24-100040: Ubuntu 24.04 LTS must not have the rsh-server package installed.-->
         <select idref="xccdf_org.ssgproject.content_rule_package_rsh-server_removed" selected="true"/>
         <!--UBTU-24-100100: Ubuntu 24.04 LTS must use a file integrity tool to verify correct operation of all security functions.-->
-        <!-- decisions.yml override [UBTU-24-100100]: AIDE installation and configuration is owned by the separate aide-boshrelease deployed alongside this release. Managing it here too would cause the two releases to fight over the same configuration. --><select idref="xccdf_org.ssgproject.content_rule_package_aide_installed" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_package_aide_installed" selected="true"/>
         <!--UBTU-24-100110: Ubuntu 24.04 LTS must configure AIDE to preform file integrity checking on the file system.-->
-        <!-- decisions.yml override [UBTU-24-100110]: See package_aide_installed - AIDE lifecycle owned by aide-boshrelease. --><select idref="xccdf_org.ssgproject.content_rule_aide_build_database" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_aide_build_database" selected="true"/>
         <!--UBTU-24-100120: Ubuntu 24.04 LTS must be configured so that the script which runs each 30 days or less to check file integrity is the default one.-->
-        <!-- decisions.yml override [UBTU-24-100120]: New in the Noble benchmark, same family as the AIDE rules excepted above. AIDE installation, configuration, and scheduling are owned by the separate aide-boshrelease deployed alongside this release; a usg systemd timer would duplicate or conflict with its scheduling. --><select idref="xccdf_org.ssgproject.content_rule_aide_periodic_checking_systemd_timer" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-100120]: See package_aide_installed - AIDE lifecycle owned by aide-boshrelease. --><select idref="xccdf_org.ssgproject.content_rule_aide_periodic_cron_checking" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_aide_periodic_checking_systemd_timer" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_aide_periodic_cron_checking" selected="true"/>
         <!--UBTU-24-100130: Ubuntu 24.04 LTS must notify designated personnel if baseline configurations are changed in an unauthorized manner. The file integrity tool must notify the system administrator (SA) when changes to the baseline configuration or anomalies in the operation of any security functions are discovered.-->
-        <!-- decisions.yml override [UBTU-24-100130]: See package_aide_installed - AIDE lifecycle owned by aide-boshrelease. --><select idref="xccdf_org.ssgproject.content_rule_aide_disable_silentreports" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_aide_disable_silentreports" selected="true"/>
         <!--UBTU-24-100200: Ubuntu 24.04 LTS must be configured to preserve log records from failure events.-->
         <select idref="xccdf_org.ssgproject.content_rule_service_rsyslog_enabled" selected="true"/>
         <!--UBTU-24-100300: Ubuntu 24.04 LTS must have an application firewall installed in order to control remote access methods.-->
         <set-value idref="xccdf_org.ssgproject.content_value_var_network_filtering_service">ufw</set-value>
-        <!-- decisions.yml override [UBTU-24-100300]: Because IP addresses are dynamic in TAS, ufw cannot be used to limit traffic between hosts. Application Security Groups (ASGs) and perimeter firewalls for the TAS subnet are used instead; iptables is used directly where necessary. --><select idref="xccdf_org.ssgproject.content_rule_package_ufw_installed" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_package_ufw_installed" selected="true"/>
         <!--UBTU-24-100310: Ubuntu 24.04 LTS must enable and run the Uncomplicated Firewall (ufw).-->
-        <!-- decisions.yml override [UBTU-24-100310]: See package_ufw_installed above - ufw is not part of this architecture's network control model. --><select idref="xccdf_org.ssgproject.content_rule_check_ufw_active" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_check_ufw_active" selected="true"/>
         <!--UBTU-24-100400: Ubuntu 24.04 LTS must have the "auditd" package installed.-->
         <select idref="xccdf_org.ssgproject.content_rule_package_audit_installed" selected="true"/>
         <!--UBTU-24-100410: Ubuntu 24.04 LTS must produce audit records and reports containing information to establish when, where, what type, the source, and the outcome for all DOD-defined auditable events and actions in near real time.-->
         <select idref="xccdf_org.ssgproject.content_rule_service_auditd_enabled" selected="true"/>
         <!--UBTU-24-100450: Ubuntu 24.04 LTS audit event multiplexor must be configured to offload audit logs onto a different system or storage media from the system being audited.-->
-        <!-- decisions.yml override [UBTU-24-100450]: Audit event multiplexor (audispd) is not installed on stemcells. Log forwarding to a remote syslog ingestor is handled outside this job (see aide-boshrelease / centralized logging). --><select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_remote_server" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-100450]: See auditd_audispd_configure_remote_server above. --><select idref="xccdf_org.ssgproject.content_rule_package_audit-audispd-plugins_installed" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_remote_server" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_package_audit-audispd-plugins_installed" selected="true"/>
         <!--UBTU-24-100500: Ubuntu 24.04 LTS must have AppArmor installed.-->
         <select idref="xccdf_org.ssgproject.content_rule_package_apparmor_installed" selected="true"/>
         <!--UBTU-24-100510: Ubuntu 24.04 LTS must be configured to use AppArmor.-->
@@ -43,11 +43,11 @@
         <!--UBTU-24-100600: Ubuntu 24.04 LTS must have the "libpam-pwquality" package installed.-->
         <select idref="xccdf_org.ssgproject.content_rule_package_pam_pwquality_installed" selected="true"/>
         <!--UBTU-24-100650: Ubuntu 24.04 LTS must have the "SSSD" package installed.-->
-        <!-- decisions.yml override [UBTU-24-100650]: See package_sssd_installed - no MFA/identity provider on stemcells. --><select idref="xccdf_org.ssgproject.content_rule_package_nss_sss_installed" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-100650]: See package_sssd_installed - no MFA/identity provider on stemcells. --><select idref="xccdf_org.ssgproject.content_rule_package_pam_sss_installed" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-100650]: SSSD is the STIG's multifactor authentication mechanism (UBTU-24-100660). Stemcells do not support MFA; only root and vcap exist and `bosh ssh` users authenticate by ephemeral SSH key. --><select idref="xccdf_org.ssgproject.content_rule_package_sssd_installed" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_package_nss_sss_installed" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_package_pam_sss_installed" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_package_sssd_installed" selected="true"/>
         <!--UBTU-24-100660: Ubuntu 24.04 LTS must use the "SSSD" package for multifactor authentication services.-->
-        <!-- decisions.yml override [UBTU-24-100660]: Enabling sssd with no identity provider configured risks a crash-looping systemd unit on every BOSH VM, for a mechanism this platform does not use. --><select idref="xccdf_org.ssgproject.content_rule_service_sssd_enabled" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_service_sssd_enabled" selected="true"/>
         <!--UBTU-24-100700: Ubuntu 24.04 LTS must have the "chrony" package installed.-->
         <set-value idref="xccdf_org.ssgproject.content_value_var_timesync_service">chronyd</set-value>
         <select idref="xccdf_org.ssgproject.content_rule_package_chrony_installed" selected="true"/>
@@ -64,14 +64,14 @@
         <!--UBTU-24-100850: Ubuntu 24.04 LTS must configure the SSH client to use FIPS 140-3 approved ciphers to prevent the unauthorized disclosure of information and/or detect changes to information during transmission.-->
         <select idref="xccdf_org.ssgproject.content_rule_ssh_client_use_approved_ciphers_ordered_stig" selected="true"/>
         <!--UBTU-24-100860: Ubuntu 24.04 LTS SSH client must be configured to use only Message Authentication Codes (MACs) employing FIPS 140-3 validated cryptographic hash algorithms.-->
-        <!-- decisions.yml override [UBTU-24-100830, UBTU-24-100860]: STIG default drops umac-128-etm@openssh.com and umac-128@openssh.com, which the BOSH stemcell baseline (base_ssh/apply.sh) offers. Removing them is a client-compatibility surface change with no corresponding benefit (umac-128 is not a weak MAC - the STIG list is simply narrower). This value feeds both the server rule (sshd_use_approved_macs_ordered_stig) and the client rule (ssh_use_approved_macs_ordered_stig); both remain ENABLED. --><set-value idref="xccdf_org.ssgproject.content_value_ssh_approved_macs">hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com</set-value>
+        <set-value idref="xccdf_org.ssgproject.content_value_ssh_approved_macs">hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256</set-value>
         <select idref="xccdf_org.ssgproject.content_rule_ssh_use_approved_macs_ordered_stig" selected="true"/>
         <!--UBTU-24-100900: Ubuntu 24.04 LTS must accept Personal Identity Verification (PIV) credentials.-->
-        <!-- decisions.yml override [UBTU-24-100900]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_package_opensc_installed" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_package_opensc_installed" selected="true"/>
         <!--UBTU-24-100910: Ubuntu 24.04 LTS must accept Personal Identity Verification (PIV) credentials managed through the Privileged Access Management (PAM) framework.-->
-        <!-- decisions.yml override [UBTU-24-100910]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_install_smartcard_packages" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_install_smartcard_packages" selected="true"/>
         <!--UBTU-24-101000: Ubuntu 24.04 LTS must allow users to directly initiate a session lock for all connection types.-->
-        <!-- decisions.yml override [UBTU-24-101000]: A session lock is a temporary action for a user stepping away from an interactive terminal; not applicable to ephemeral, non-interactive BOSH-deployed VMs. --><select idref="xccdf_org.ssgproject.content_rule_vlock_installed" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_vlock_installed" selected="true"/>
         <!--UBTU-24-102000: Ubuntu 24.04 LTS when booted must require authentication upon booting into single-user and maintenance modes.-->
         <select idref="xccdf_org.ssgproject.content_rule_grub2_password" selected="true"/>
         <select idref="xccdf_org.ssgproject.content_rule_grub2_uefi_password" selected="true"/>
@@ -83,19 +83,19 @@
         <!--UBTU-24-200020: Ubuntu 24.04 LTS must initiate a graphical session lock after 10 minutes of inactivity.-->
         <set-value idref="xccdf_org.ssgproject.content_value_inactivity_timeout_value">600</set-value>
         <set-value idref="xccdf_org.ssgproject.content_value_var_screensaver_lock_delay">0</set-value>
-        <!-- decisions.yml override [UBTU-24-200020]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_idle_delay" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-200020]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_delay" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_idle_delay" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_delay" selected="true"/>
         <!--UBTU-24-200040: Ubuntu 24.04 LTS must retain a user's session lock until the user reestablishes access using established identification and authentication procedures.-->
-        <!-- decisions.yml override [UBTU-24-200040]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_enabled" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_enabled" selected="true"/>
         <!--UBTU-24-200060: Ubuntu 24.04 LTS must automatically terminate a user session after inactivity timeouts have expired.-->
         <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_tmout">600</set-value>
-        <!-- decisions.yml override [UBTU-24-200060]: CONFLICT, not preference: the Noble stemcell ships /etc/profile.d/01-tmout.sh with `readonly TMOUT=900`, and this release declares it readonly. usg fix writing a second TMOUT=600 would attempt to reassign a readonly shell variable ("TMOUT: readonly variable") every login. The control's intent (idle session timeout) is already met at 900s by the platform itself. --><select idref="xccdf_org.ssgproject.content_rule_accounts_tmout" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_tmout" selected="true"/>
         <!--UBTU-24-200090: Ubuntu 24.04 LTS must monitor remote access methods.-->
         <select idref="xccdf_org.ssgproject.content_rule_rsyslog_remote_access_monitoring" selected="true"/>
         <!--UBTU-24-200250: Ubuntu 24.04 LTS must automatically remove or disable emergency accounts after 72 hours.-->
-        <!-- decisions.yml override [UBTU-24-200250]: Stemcells do not have temporary accounts. --><select idref="xccdf_org.ssgproject.content_rule_account_temp_expire_date" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_account_temp_expire_date" selected="true"/>
         <!--UBTU-24-200260: Ubuntu 24.04 LTS must disable account identifiers (individuals, groups, roles, and devices) after 35 days of inactivity.-->
-        <!-- decisions.yml override [UBTU-24-200260]: Disabling identifiers after 35 days of inactivity is actively dangerous here: vcap is a service account that never "logs in", and `bosh ssh` users live for minutes before `userdel -rf`. Applying this risks disabling the account BOSH runs every job as. --><select idref="xccdf_org.ssgproject.content_rule_account_disable_post_pw_expiration" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_account_disable_post_pw_expiration" selected="true"/>
         <!--UBTU-24-200280: Ubuntu 24.04 LTS must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/passwd.-->
         <select idref="xccdf_org.ssgproject.content_rule_audit_rules_usergroup_modification_passwd" selected="true"/>
         <!--UBTU-24-200290: Ubuntu 24.04 LTS must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/group.-->
@@ -112,23 +112,23 @@
         <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_passwords_pam_faillock_deny">3</set-value>
         <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_passwords_pam_faillock_fail_interval">900</set-value>
         <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_passwords_pam_faillock_unlock_time">0</set-value>
-        <!-- decisions.yml override [UBTU-24-200610]: Part of the same faillock block. See the ACCOUNT LOCKOUT note above. --><select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_audit" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-200610]: Accepted AC-7 gap - see the ACCOUNT LOCKOUT note above. No password authentication path exists to brute force, and the STIG deny=3 paired with unlock_time=0 risks permanently locking root/vcap. --><select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_deny" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-200610]: Part of the same faillock block. See the ACCOUNT LOCKOUT note above. --><select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_interval" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-200610]: Part of the same faillock block. See the ACCOUNT LOCKOUT note above. --><select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_silent" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-200610]: STIG wants unlock_time=0, i.e. NEVER auto-unlock until an administrator releases the account. On a BOSH VM the only accounts are root and vcap - the service accounts BOSH itself needs - so a permanent lock is a self-inflicted denial of service with no operator expecting to unlock it. See the ACCOUNT LOCKOUT note above. --><select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_unlock_time" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_audit" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_deny" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_interval" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_silent" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_unlock_time" selected="true"/>
         <!--UBTU-24-200640: Ubuntu 24.04 LTS must display the Standard Mandatory DOD Notice and Consent Banner before granting access to via an SSH logon.-->
         <set-value idref="xccdf_org.ssgproject.content_value_remote_login_banner_text">^(You[\s\n]+are[\s\n]+accessing[\s\n]+a[\s\n]+U\.S\.[\s\n]+Government[\s\n]+\(USG\)[\s\n]+Information[\s\n]+System[\s\n]+\(IS\)[\s\n]+that[\s\n]+is[\s\n]+provided[\s\n]+for[\s\n]+USG\-authorized[\s\n]+use[\s\n]+only\.[\s\n]+By[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+\(which[\s\n]+includes[\s\n]+any[\s\n]+device[\s\n]+attached[\s\n]+to[\s\n]+this[\s\n]+IS\),[\s\n]+you[\s\n]+consent[\s\n]+to[\s\n]+the[\s\n]+following[\s\n]+conditions\:(?:[\n]+|(?:\\n)+)\-The[\s\n]+USG[\s\n]+routinely[\s\n]+intercepts[\s\n]+and[\s\n]+monitors[\s\n]+communications[\s\n]+on[\s\n]+this[\s\n]+IS[\s\n]+for[\s\n]+purposes[\s\n]+including,[\s\n]+but[\s\n]+not[\s\n]+limited[\s\n]+to,[\s\n]+penetration[\s\n]+testing,[\s\n]+COMSEC[\s\n]+monitoring,[\s\n]+network[\s\n]+operations[\s\n]+and[\s\n]+defense,[\s\n]+personnel[\s\n]+misconduct[\s\n]+\(PM\),[\s\n]+law[\s\n]+enforcement[\s\n]+\(LE\),[\s\n]+and[\s\n]+counterintelligence[\s\n]+\(CI\)[\s\n]+investigations\.(?:[\n]+|(?:\\n)+)\-At[\s\n]+any[\s\n]+time,[\s\n]+the[\s\n]+USG[\s\n]+may[\s\n]+inspect[\s\n]+and[\s\n]+seize[\s\n]+data[\s\n]+stored[\s\n]+on[\s\n]+this[\s\n]+IS\.(?:[\n]+|(?:\\n)+)\-Communications[\s\n]+using,[\s\n]+or[\s\n]+data[\s\n]+stored[\s\n]+on,[\s\n]+this[\s\n]+IS[\s\n]+are[\s\n]+not[\s\n]+private,[\s\n]+are[\s\n]+subject[\s\n]+to[\s\n]+routine[\s\n]+monitoring,[\s\n]+interception,[\s\n]+and[\s\n]+search,[\s\n]+and[\s\n]+may[\s\n]+be[\s\n]+disclosed[\s\n]+or[\s\n]+used[\s\n]+for[\s\n]+any[\s\n]+USG\-authorized[\s\n]+purpose\.(?:[\n]+|(?:\\n)+)\-This[\s\n]+IS[\s\n]+includes[\s\n]+security[\s\n]+measures[\s\n]+\(e\.g\.,[\s\n]+authentication[\s\n]+and[\s\n]+access[\s\n]+controls\)[\s\n]+to[\s\n]+protect[\s\n]+USG[\s\n]+interests\-\-not[\s\n]+for[\s\n]+your[\s\n]+personal[\s\n]+benefit[\s\n]+or[\s\n]+privacy\.(?:[\n]+|(?:\\n)+)\-Notwithstanding[\s\n]+the[\s\n]+above,[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+does[\s\n]+not[\s\n]+constitute[\s\n]+consent[\s\n]+to[\s\n]+PM,[\s\n]+LE[\s\n]+or[\s\n]+CI[\s\n]+investigative[\s\n]+searching[\s\n]+or[\s\n]+monitoring[\s\n]+of[\s\n]+the[\s\n]+content[\s\n]+of[\s\n]+privileged[\s\n]+communications,[\s\n]+or[\s\n]+work[\s\n]+product,[\s\n]+related[\s\n]+to[\s\n]+personal[\s\n]+representation[\s\n]+or[\s\n]+services[\s\n]+by[\s\n]+attorneys,[\s\n]+psychotherapists,[\s\n]+or[\s\n]+clergy,[\s\n]+and[\s\n]+their[\s\n]+assistants\.[\s\n]+Such[\s\n]+communications[\s\n]+and[\s\n]+work[\s\n]+product[\s\n]+are[\s\n]+private[\s\n]+and[\s\n]+confidential\.[\s\n]+See[\s\n]+User[\s\n]+Agreement[\s\n]+for[\s\n]+details\.|I've[\s\n]+read[\s\n]+\&amp;[\s\n]+consent[\s\n]+to[\s\n]+terms[\s\n]+in[\s\n]+IS[\s\n]+user[\s\n]+agreem't\.)$</set-value>
         <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_warning_banner_net" selected="true"/>
         <select idref="xccdf_org.ssgproject.content_rule_banner_etc_issue_net" selected="true"/>
         <!--UBTU-24-200650: Ubuntu 24.04 LTS must enable the graphical user logon banner to display the Standard Mandatory DOD Notice and Consent Banner before granting local access to the system via a graphical user logon.-->
-        <!-- decisions.yml override [UBTU-24-200650]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_banner_enabled" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_banner_enabled" selected="true"/>
         <!--UBTU-24-200660: Ubuntu 24.04 LTS must display the Standard Mandatory DOD Notice and Consent Banner before granting local access to the system via a graphical user logon.-->
         <set-value idref="xccdf_org.ssgproject.content_value_login_banner_text">^(You[\s\n]+are[\s\n]+accessing[\s\n]+a[\s\n]+U\.S\.[\s\n]+Government[\s\n]+\(USG\)[\s\n]+Information[\s\n]+System[\s\n]+\(IS\)[\s\n]+that[\s\n]+is[\s\n]+provided[\s\n]+for[\s\n]+USG\-authorized[\s\n]+use[\s\n]+only\.[\s\n]+By[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+\(which[\s\n]+includes[\s\n]+any[\s\n]+device[\s\n]+attached[\s\n]+to[\s\n]+this[\s\n]+IS\),[\s\n]+you[\s\n]+consent[\s\n]+to[\s\n]+the[\s\n]+following[\s\n]+conditions\:(?:[\n]+|(?:\\n)+)\-The[\s\n]+USG[\s\n]+routinely[\s\n]+intercepts[\s\n]+and[\s\n]+monitors[\s\n]+communications[\s\n]+on[\s\n]+this[\s\n]+IS[\s\n]+for[\s\n]+purposes[\s\n]+including,[\s\n]+but[\s\n]+not[\s\n]+limited[\s\n]+to,[\s\n]+penetration[\s\n]+testing,[\s\n]+COMSEC[\s\n]+monitoring,[\s\n]+network[\s\n]+operations[\s\n]+and[\s\n]+defense,[\s\n]+personnel[\s\n]+misconduct[\s\n]+\(PM\),[\s\n]+law[\s\n]+enforcement[\s\n]+\(LE\),[\s\n]+and[\s\n]+counterintelligence[\s\n]+\(CI\)[\s\n]+investigations\.(?:[\n]+|(?:\\n)+)\-At[\s\n]+any[\s\n]+time,[\s\n]+the[\s\n]+USG[\s\n]+may[\s\n]+inspect[\s\n]+and[\s\n]+seize[\s\n]+data[\s\n]+stored[\s\n]+on[\s\n]+this[\s\n]+IS\.(?:[\n]+|(?:\\n)+)\-Communications[\s\n]+using,[\s\n]+or[\s\n]+data[\s\n]+stored[\s\n]+on,[\s\n]+this[\s\n]+IS[\s\n]+are[\s\n]+not[\s\n]+private,[\s\n]+are[\s\n]+subject[\s\n]+to[\s\n]+routine[\s\n]+monitoring,[\s\n]+interception,[\s\n]+and[\s\n]+search,[\s\n]+and[\s\n]+may[\s\n]+be[\s\n]+disclosed[\s\n]+or[\s\n]+used[\s\n]+for[\s\n]+any[\s\n]+USG\-authorized[\s\n]+purpose\.(?:[\n]+|(?:\\n)+)\-This[\s\n]+IS[\s\n]+includes[\s\n]+security[\s\n]+measures[\s\n]+\(e\.g\.,[\s\n]+authentication[\s\n]+and[\s\n]+access[\s\n]+controls\)[\s\n]+to[\s\n]+protect[\s\n]+USG[\s\n]+interests\-\-not[\s\n]+for[\s\n]+your[\s\n]+personal[\s\n]+benefit[\s\n]+or[\s\n]+privacy\.(?:[\n]+|(?:\\n)+)\-Notwithstanding[\s\n]+the[\s\n]+above,[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+does[\s\n]+not[\s\n]+constitute[\s\n]+consent[\s\n]+to[\s\n]+PM,[\s\n]+LE[\s\n]+or[\s\n]+CI[\s\n]+investigative[\s\n]+searching[\s\n]+or[\s\n]+monitoring[\s\n]+of[\s\n]+the[\s\n]+content[\s\n]+of[\s\n]+privileged[\s\n]+communications,[\s\n]+or[\s\n]+work[\s\n]+product,[\s\n]+related[\s\n]+to[\s\n]+personal[\s\n]+representation[\s\n]+or[\s\n]+services[\s\n]+by[\s\n]+attorneys,[\s\n]+psychotherapists,[\s\n]+or[\s\n]+clergy,[\s\n]+and[\s\n]+their[\s\n]+assistants\.[\s\n]+Such[\s\n]+communications[\s\n]+and[\s\n]+work[\s\n]+product[\s\n]+are[\s\n]+private[\s\n]+and[\s\n]+confidential\.[\s\n]+See[\s\n]+User[\s\n]+Agreement[\s\n]+for[\s\n]+details\.|I've[\s\n]+read[\s\n]+\&amp;[\s\n]+consent[\s\n]+to[\s\n]+terms[\s\n]+in[\s\n]+IS[\s\n]+user[\s\n]+agreem't\.)$</set-value>
-        <!-- decisions.yml override [UBTU-24-200660]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_login_banner_text" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_login_banner_text" selected="true"/>
         <!--UBTU-24-200680: Ubuntu 24.04 LTS must be configured to enforce the acknowledgement of the Standard Mandatory DOD Notice and Consent Banner for all SSH connections.-->
         <set-value idref="xccdf_org.ssgproject.content_value_var_ssh_confirm_text">^\#!\/bin\/bash(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)if[\s\n]+\[[\s\n]+\-n[\s\n]+"\$SSH_CLIENT"[\s\n]+\][\s\n]+\|\|[\s\n]+\[[\s\n]+\-n[\s\n]+"\$SSH_TTY"[\s\n]+\];[\s\n]+then(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+while[\s\n]+true;[\s\n]+do(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+read[\s\n]+\-p[\s\n]+"[\s\n]+(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)You[\s\n]+are[\s\n]+accessing[\s\n]+a[\s\n]+U\.S\.[\s\n]+Government[\s\n]+\(USG\)[\s\n]+Information[\s\n]+System[\s\n]+\(IS\)[\s\n]+that[\s\n]+is[\s\n]+provided[\s\n]+for[\s\n]+USG\-authorized[\s\n]+use[\s\n]+only\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)By[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+\(which[\s\n]+includes[\s\n]+any[\s\n]+device[\s\n]+attached[\s\n]+to[\s\n]+this[\s\n]+IS\),[\s\n]+you[\s\n]+consent[\s\n]+to[\s\n]+the[\s\n]+following[\s\n]+conditions\:(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-The[\s\n]+USG[\s\n]+routinely[\s\n]+intercepts[\s\n]+and[\s\n]+monitors[\s\n]+communications[\s\n]+on[\s\n]+this[\s\n]+IS[\s\n]+for[\s\n]+purposes[\s\n]+including,[\s\n]+but[\s\n]+not[\s\n]+limited[\s\n]+to,[\s\n]+penetration[\s\n]+testing,[\s\n]+COMSEC[\s\n]+monitoring,[\s\n]+network[\s\n]+operations[\s\n]+and[\s\n]+defense,[\s\n]+personnel[\s\n]+misconduct[\s\n]+\(PM\),[\s\n]+law[\s\n]+enforcement[\s\n]+\(LE\),[\s\n]+and[\s\n]+counterintelligence[\s\n]+\(CI\)[\s\n]+investigations\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-At[\s\n]+any[\s\n]+time,[\s\n]+the[\s\n]+USG[\s\n]+may[\s\n]+inspect[\s\n]+and[\s\n]+seize[\s\n]+data[\s\n]+stored[\s\n]+on[\s\n]+this[\s\n]+IS\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-Communications[\s\n]+using,[\s\n]+or[\s\n]+data[\s\n]+stored[\s\n]+on,[\s\n]+this[\s\n]+IS[\s\n]+are[\s\n]+not[\s\n]+private,[\s\n]+are[\s\n]+subject[\s\n]+to[\s\n]+routine[\s\n]+monitoring,[\s\n]+interception,[\s\n]+and[\s\n]+search,[\s\n]+and[\s\n]+may[\s\n]+be[\s\n]+disclosed[\s\n]+or[\s\n]+used[\s\n]+for[\s\n]+any[\s\n]+USG\-authorized[\s\n]+purpose\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-This[\s\n]+IS[\s\n]+includes[\s\n]+security[\s\n]+measures[\s\n]+\(e\.g\.,[\s\n]+authentication[\s\n]+and[\s\n]+access[\s\n]+controls\)[\s\n]+to[\s\n]+protect[\s\n]+USG[\s\n]+interests\-\-not[\s\n]+for[\s\n]+your[\s\n]+personal[\s\n]+benefit[\s\n]+or[\s\n]+privacy\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-Notwithstanding[\s\n]+the[\s\n]+above,[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+does[\s\n]+not[\s\n]+constitute[\s\n]+consent[\s\n]+to[\s\n]+PM,[\s\n]+LE[\s\n]+or[\s\n]+CI[\s\n]+investigative[\s\n]+searching[\s\n]+or[\s\n]+monitoring[\s\n]+of[\s\n]+the[\s\n]+content[\s\n]+of[\s\n]+privileged[\s\n]+communications,[\s\n]+or[\s\n]+work[\s\n]+product,[\s\n]+related[\s\n]+to[\s\n]+personal[\s\n]+representation[\s\n]+or[\s\n]+services[\s\n]+by[\s\n]+attorneys,[\s\n]+psychotherapists,[\s\n]+or[\s\n]+clergy,[\s\n]+and[\s\n]+their[\s\n]+assistants\.[\s\n]+Such[\s\n]+communications[\s\n]+and[\s\n]+work[\s\n]+product[\s\n]+are[\s\n]+private[\s\n]+and[\s\n]+confidential\.[\s\n]+See[\s\n]+User[\s\n]+Agreement[\s\n]+for[\s\n]+details\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)Do[\s\n]+you[\s\n]+agree\?[\s\n]+\[y\/N\][\s\n]+"[\s\n]+yn(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+case[\s\n]+\$yn[\s\n]+in(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+\[Yy\]\*[\s\n]+\)[\s\n]+break[\s\n]+;;(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+\[Nn\]\*[\s\n]+\)[\s\n]+exit[\s\n]+1[\s\n]+;;(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+esac(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+done(?:[\n]+|(?:\\n)+)fi(?:[\n]+|(?:\\n)+)$</set-value>
-        <!-- decisions.yml override [UBTU-24-200680]: This control requires a script in /etc/profile.d containing an interactive `read -p "... Do you agree? [y/N] "` loop that exits 1 on anything but yes. An interactive `bosh ssh` session is a LOGIN shell, so /etc/profile.d IS sourced and every operator session would block on a prompt (and any tooling that opens an interactive shell would hang). The DOD notice-and-consent requirement is still met non-interactively by sshd_enable_warning_banner_net (UBTU-24-200640, Banner /etc/issue.net), which remains ENABLED - the stemcell's own base_ssh stage already sets `Banner /etc/issue.net`. --><select idref="xccdf_org.ssgproject.content_rule_banner_etc_profiled_ssh_confirm" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_banner_etc_profiled_ssh_confirm" selected="true"/>
         <!--UBTU-24-300001: Ubuntu 24.04 LTS Advance Package Tool (APT) must be configured to prevent the installation of patches, service packs, device drivers, or Ubuntu 24.04 LTS components without verification they have been digitally signed using a certificate that is recognized and approved by the organization.-->
         <select idref="xccdf_org.ssgproject.content_rule_apt_conf_disallow_unauthenticated" selected="true"/>
         <!--UBTU-24-300006: Ubuntu 24.04 LTS library files must have mode 0755 or less permissive.-->
@@ -158,15 +158,15 @@
         <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_delay">4000000</set-value>
         <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faildelay_delay" selected="true"/>
         <!--UBTU-24-300021: Ubuntu 24.04 LTS must require users to reauthenticate for privilege escalation or when changing roles.-->
-        <!-- decisions.yml override [UBTU-24-300021]: BOSH SSH uses key-based login; ssh users are granted passwordless sudo by design. Forcing sudo reauthentication breaks the BOSH SSH access model. (UBTU-24-600130 / ensure_sudo_group_restricted is unaffected and remains enabled.) --><select idref="xccdf_org.ssgproject.content_rule_sudo_require_authentication" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_sudo_require_authentication" selected="true"/>
         <!--UBTU-24-300022: Ubuntu 24.04 LTS must be configured so that remote X connections are disabled, unless to fulfill documented and validated mission requirements.-->
         <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_x11_forwarding" selected="true"/>
         <!--UBTU-24-300023: Ubuntu 24.04 LTS SSH daemon must prevent remote hosts from connecting to the proxy display.-->
         <select idref="xccdf_org.ssgproject.content_rule_sshd_x11_use_localhost" selected="true"/>
         <!--UBTU-24-300024: Ubuntu 24.04 LTS must display the date and time of the last successful account logon upon logon.-->
-        <!-- decisions.yml override [UBTU-24-300024]: This control configures pam_lastlog, which upstream PAM REMOVED in 1.5.3; Ubuntu 24.04 ships PAM 1.5.3 with pam_lastlog2 as the replacement. If usg fix writes a `required` pam_lastlog.so line and the module is absent, every login fails. Excepted as a platform compatibility risk. Revisit if a future benchmark targets pam_lastlog2. --><select idref="xccdf_org.ssgproject.content_rule_display_login_attempts" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_display_login_attempts" selected="true"/>
         <!--UBTU-24-300025: Ubuntu 24.04 LTS must disable the x86 Ctrl-Alt-Delete key sequence if a graphical user interface is installed.-->
-        <!-- decisions.yml override [UBTU-24-300025]: GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed. --><select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_disable_ctrlaltdel_reboot" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_disable_ctrlaltdel_reboot" selected="true"/>
         <!--UBTU-24-300026: Ubuntu 24.04 LTS must disable the x86 Ctrl-Alt-Delete key sequence.-->
         <select idref="xccdf_org.ssgproject.content_rule_disable_ctrlaltdel_reboot" selected="true"/>
         <!--UBTU-24-300027: Ubuntu 24.04 LTS must not have accounts configured with blank or null passwords.-->
@@ -184,15 +184,15 @@
         <!--UBTU-24-300039: Ubuntu 24.04 LTS must disable automatic mounting of Universal Serial Bus (USB) mass storage driver.-->
         <select idref="xccdf_org.ssgproject.content_rule_kernel_module_usb-storage_disabled" selected="true"/>
         <!--UBTU-24-300041: Ubuntu 24.04 LTS must be configured to prohibit or restrict the use of functions, ports, protocols, and/or services, as defined in the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) and vulnerability assessments.-->
-        <!-- decisions.yml override [UBTU-24-300041]: Depends on ufw being in use; not applicable given the ASG/iptables model (see package_ufw_installed). --><select idref="xccdf_org.ssgproject.content_rule_ufw_only_required_services" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_ufw_only_required_services" selected="true"/>
         <!--UBTU-24-400000: Ubuntu 24.04 LTS must uniquely identify interactive users.-->
         <select idref="xccdf_org.ssgproject.content_rule_no_duplicate_uids" selected="true"/>
         <!--UBTU-24-400020: Ubuntu 24.04 LTS must implement smart card logins for multifactor authentication for local and network access to privileged and nonprivileged accounts.-->
-        <!-- decisions.yml override [UBTU-24-400020]: Stemcells do not support multifactor authentication. sshd_enable_pubkey_auth (UBTU-24-400030) remains enabled - BOSH SSH access depends on SSH public-key authentication independent of smart-card MFA. --><select idref="xccdf_org.ssgproject.content_rule_smartcard_pam_enabled" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_smartcard_pam_enabled" selected="true"/>
         <!--UBTU-24-400030: Ubuntu 24.04 LTS must implement smart card logins for multifactor authentication for local and network access to privileged and nonprivileged accounts over SSH.-->
         <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_pubkey_auth" selected="true"/>
         <!--UBTU-24-400060: Ubuntu 24.04 LTS must electronically verify Personal Identity Verification (PIV) credentials.-->
-        <!-- decisions.yml override [UBTU-24-400060]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_cert_checking" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_cert_checking" selected="true"/>
         <!--UBTU-24-400110: Ubuntu 24.04 LTS must prevent direct login to the root account.-->
         <select idref="xccdf_org.ssgproject.content_rule_prevent_direct_root_logins" selected="true"/>
         <!--UBTU-24-400220: Ubuntu 24.04 LTS must store only encrypted representations of passwords.-->
@@ -216,7 +216,7 @@
         <select idref="xccdf_org.ssgproject.content_rule_accounts_minimum_age_login_defs" selected="true"/>
         <!--UBTU-24-400310: Ubuntu 24.04 LTS must enforce a 60-day maximum password lifetime restriction. Passwords for new users must have a 60-day maximum password lifetime restriction.-->
         <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_maximum_age_login_defs">60</set-value>
-        <!-- decisions.yml override [UBTU-24-400310]: STIG wants PASS_MAX_DAYS 60; this release uses 90. Password expiry is meaningless on two locked service accounts that never authenticate by password, and an expiring vcap password is a live hazard to BOSH operations rather than a security gain. PASS_MIN_DAYS (1) is still enforced - see accounts_minimum_age_login_defs. --><select idref="xccdf_org.ssgproject.content_rule_accounts_maximum_age_login_defs" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_accounts_maximum_age_login_defs" selected="true"/>
         <!--UBTU-24-400320: Ubuntu 24.04 LTS must enforce a minimum 15-character password length.-->
         <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_minlen">15</set-value>
         <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_minlen" selected="true"/>
@@ -224,17 +224,17 @@
         <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_ocredit">-1</set-value>
         <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_ocredit" selected="true"/>
         <!--UBTU-24-400340: Ubuntu 24.04 LTS must be configured such that Pluggable Authentication Module (PAM) prohibits the use of cached authentications after one day.-->
-        <!-- decisions.yml override [UBTU-24-400340]: Only applicable if smart card authentication is in use. Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_sssd_offline_cred_expiration" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_sssd_offline_cred_expiration" selected="true"/>
         <!--UBTU-24-400360: Ubuntu 24.04 LTS, for PKI-based authentication, SSSD must validate certificates by constructing a certification path (which includes status information) to an accepted trust anchor.-->
-        <!-- decisions.yml override [UBTU-24-400360]: Wiring SSSD into the PAM stack is an authentication-path change for a mechanism not in use. Modifying PAM unnecessarily risks the login-breakage class of defect seen in Increment 1 (§B4b.0). --><select idref="xccdf_org.ssgproject.content_rule_sssd_enable_pam_services" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-400360]: Stemcells do not support multifactor authentication (smart card). --><select idref="xccdf_org.ssgproject.content_rule_sssd_enable_smartcards" selected="false"/>
-        <!-- decisions.yml override [UBTU-24-400360]: PKI certification-path validation is only meaningful with smart-card / PKI authentication, which this platform does not use. --><select idref="xccdf_org.ssgproject.content_rule_sssd_certification_path_trust_anchor" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_sssd_enable_pam_services" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_sssd_enable_smartcards" selected="true"/>
+        <select idref="xccdf_org.ssgproject.content_rule_sssd_certification_path_trust_anchor" selected="true"/>
         <!--UBTU-24-400370: Ubuntu 24.04 LTS must map the authenticated identity to the user or group account for PKI-based authentication.-->
-        <!-- decisions.yml override [UBTU-24-400370]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_sssd_enable_user_cert" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_sssd_enable_user_cert" selected="true"/>
         <!--UBTU-24-400375: Ubuntu 24.04 LTS, for PKI-based authentication, Privileged Access Management (PAM) must validate certificates by constructing a certification path (which includes status information) to an accepted trust anchor.-->
-        <!-- decisions.yml override [UBTU-24-400375]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_ca" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_ca" selected="true"/>
         <!--UBTU-24-400380: Ubuntu 24.04 LTS for PKI-based authentication, must implement a local cache of revocation data in case of the inability to access revocation information via the network.-->
-        <!-- decisions.yml override [UBTU-24-400380]: Stemcells do not support multifactor authentication. --><select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_crl" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_crl" selected="true"/>
         <!--UBTU-24-400400: Ubuntu 24.04 LTS must encrypt all stored passwords with a FIPS 140-3 approved cryptographic hashing algorithm.-->
         <select idref="xccdf_org.ssgproject.content_rule_set_password_hashing_algorithm_logindefs" selected="true"/>
         <!--UBTU-24-500010: Ubuntu 24.04 LTS must generate audit records for privileged activities, nonlocal maintenance, diagnostic sessions, and other system-level access.-->
@@ -245,16 +245,16 @@
         <set-value idref="xccdf_org.ssgproject.content_value_var_sshd_set_keepalive">1</set-value>
         <select idref="xccdf_org.ssgproject.content_rule_sshd_set_keepalive" selected="true"/>
         <!--UBTU-24-600010: Ubuntu 24.04 LTS must immediately terminate all network connections associated with SSH traffic at the end of the session or after 10 minutes of inactivity.-->
-        <!-- decisions.yml override [UBTU-24-600010]: STIG default is ClientAliveInterval 600; the BOSH stemcell ships 180. Keeping 180 preserves the platform baseline and is STRICTER than the STIG requires, so the control is still satisfied. --><set-value idref="xccdf_org.ssgproject.content_value_sshd_idle_timeout_value">180</set-value>
+        <set-value idref="xccdf_org.ssgproject.content_value_sshd_idle_timeout_value">600</set-value>
         <select idref="xccdf_org.ssgproject.content_rule_sshd_set_idle_timeout" selected="true"/>
         <!--UBTU-24-600030: Ubuntu 24.04 LTS must implement NIST FIPS-validated cryptography to protect classified information and for the following: To provision digital signatures, to generate cryptographic hashes, and to protect unclassified information requiring confidentiality and cryptographic protection in accordance with applicable federal laws, Executive Orders, directives, policies, regulations, and standards.-->
         <select idref="xccdf_org.ssgproject.content_rule_is_fips_mode_enabled" selected="true"/>
         <!--UBTU-24-600060: Ubuntu 24.04 LTS must use DOD PKI-established certificate authorities (CAs) for verification of the establishment of protected sessions.-->
-        <!-- decisions.yml override [UBTU-24-600060]: No DOD PKI / smart-card authentication path exists on BOSH stemcells; SSH access is key-based, not certificate-based via DOD-issued CAs. --><select idref="xccdf_org.ssgproject.content_rule_only_allow_dod_certs" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_only_allow_dod_certs" selected="true"/>
         <!--UBTU-24-600070: Ubuntu 24.04 LTS must disable kernel core dumps.-->
         <select idref="xccdf_org.ssgproject.content_rule_service_kdump_disabled" selected="true"/>
         <!--UBTU-24-600090: Ubuntu 24.04 LTS handling data requiring "data at rest" protections must employ cryptographic mechanisms to prevent unauthorized disclosure and modification of the information at rest.-->
-        <!-- decisions.yml override [UBTU-24-600090]: Disk encryption is handled by the IaaS. --><select idref="xccdf_org.ssgproject.content_rule_encrypt_partitions" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_encrypt_partitions" selected="true"/>
         <!--UBTU-24-600130: Ubuntu 24.04 LTS must ensure only users who need access to security functions are part of sudo group.-->
         <select idref="xccdf_org.ssgproject.content_rule_ensure_sudo_group_restricted" selected="true"/>
         <!--UBTU-24-600140: Ubuntu 24.04 LTS must restrict access to the kernel message buffer.-->
@@ -264,19 +264,19 @@
         <!--UBTU-24-600160: Ubuntu 24.04 LTS must compare internal information system clocks at least every 24 hours with an authoritative time server.-->
         <set-value idref="xccdf_org.ssgproject.content_value_var_time_service_set_maxpoll">16</set-value>
         <set-value idref="xccdf_org.ssgproject.content_value_var_multiple_time_servers">0.us.pool.ntp.mil</set-value>
-        <!-- decisions.yml override [UBTU-24-600160]: Gold value is var_multiple_time_servers=0.us.pool.ntp.mil, which is not reachable from this environment and is not the authoritative source for this deployment. Time servers come from env.bosh.ntp via the agent. Note chronyd_or_ntpd_set_maxpoll remains ACCEPTED (16) - maxpoll is a chrony.conf tunable the agent does not manage. --><select idref="xccdf_org.ssgproject.content_rule_chronyd_specify_remote_server" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_chronyd_specify_remote_server" selected="true"/>
         <select idref="xccdf_org.ssgproject.content_rule_chronyd_or_ntpd_set_maxpoll" selected="true"/>
-        <!-- decisions.yml override [UBTU-24-600160]: The BOSH agent owns time configuration via /etc/chrony/sources.d/bosh.sources (written by chrony-updater from env.bosh.ntp). usg fix adding a competing `server` directive to chrony.conf would fight the agent on every deploy. --><select idref="xccdf_org.ssgproject.content_rule_chronyd_server_directive" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_chronyd_server_directive" selected="true"/>
         <!--UBTU-24-600180: Ubuntu 24.04 LTS must synchronize internal information system clocks to the authoritative time source when the time difference is greater than one second.-->
         <select idref="xccdf_org.ssgproject.content_rule_chronyd_sync_clock" selected="true"/>
         <!--UBTU-24-600190: Ubuntu 24.04 LTS must be configured to use TCP syncookies.-->
         <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_tcp_syncookies" selected="true"/>
         <!--UBTU-24-600200: Ubuntu 24.04 LTS must configure the uncomplicated firewall to rate-limit impacted network interfaces.-->
-        <!-- decisions.yml override [UBTU-24-600200]: Depends on ufw being in use; not applicable given the ASG/iptables model (see package_ufw_installed). --><select idref="xccdf_org.ssgproject.content_rule_ufw_rate_limit" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_ufw_rate_limit" selected="true"/>
         <!--UBTU-24-600230: Ubuntu 24.04 LTS must disable all wireless network adapters.-->
-        <!-- decisions.yml override [UBTU-24-600230]: Not applicable: the system has no physical wireless network radios present. --><select idref="xccdf_org.ssgproject.content_rule_wireless_disable_interfaces" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_wireless_disable_interfaces" selected="true"/>
         <!--UBTU-24-700010: Ubuntu 24.04 LTS must generate error messages that provide information necessary for corrective actions without revealing information that could be exploited by adversaries.-->
-        <!-- decisions.yml override [UBTU-24-700010]: File /var/log/sysstat/sa<Number> has group write and global read for sysstat's system activity report (sar) to function. --><select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log_stig" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log_stig" selected="true"/>
         <!--UBTU-24-700020: Ubuntu 24.04 LTS must generate system journal entries without revealing information that could be exploited by adversaries.-->
         <select idref="xccdf_org.ssgproject.content_rule_dir_permissions_system_journal" selected="true"/>
         <select idref="xccdf_org.ssgproject.content_rule_file_permissions_system_journal" selected="true"/>
@@ -299,9 +299,9 @@
         <!--UBTU-24-700110: Ubuntu 24.04 LTS must configure the /var/log directory to be owned by root.-->
         <select idref="xccdf_org.ssgproject.content_rule_file_owner_var_log" selected="true"/>
         <!--UBTU-24-700120: Ubuntu 24.04 LTS must configure the /var/log directory to have mode "0755" or less permissive.-->
-        <!-- decisions.yml override [UBTU-24-700120]: Group "vcap" requires write permission on /var/log. Forcing mode 0755 breaks BOSH job log writes. --><select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log" selected="true"/>
         <!--UBTU-24-700130: Ubuntu 24.04 LTS must configure the /var/log/syslog file to be group-owned by adm.-->
-        <!-- decisions.yml override [UBTU-24-700130]: /var/log/syslog is intentionally group-owned by "syslog" (not "adm") on this platform. --><select idref="xccdf_org.ssgproject.content_rule_file_groupowner_var_log_syslog" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_var_log_syslog" selected="true"/>
         <!--UBTU-24-700140: Ubuntu 24.04 LTS must configure /var/log/syslog file to be owned by syslog.-->
         <select idref="xccdf_org.ssgproject.content_rule_file_owner_var_log_syslog" selected="true"/>
         <!--UBTU-24-700150: Ubuntu 24.04 LTS must configure /var/log/syslog file with mode "0640" or less permissive.-->
@@ -370,9 +370,9 @@
         <!--UBTU-24-900220: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the apparmor_parser command.-->
         <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_apparmor_parser" selected="true"/>
         <!--UBTU-24-900230: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the setfacl command.-->
-        <!-- decisions.yml override [UBTU-24-900230]: File /usr/bin/setfacl does not exist on stemcells. --><select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_setfacl" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_setfacl" selected="true"/>
         <!--UBTU-24-900240: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the chacl command.-->
-        <!-- decisions.yml override [UBTU-24-900240]: File /usr/bin/chacl does not exist on stemcells. --><select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_chacl" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_chacl" selected="true"/>
         <!--UBTU-24-900250: Ubuntu 24.04 LTS must generate audit records for the use and modification of faillog file.-->
         <select idref="xccdf_org.ssgproject.content_rule_audit_rules_login_events_faillog" selected="true"/>
         <!--UBTU-24-900260: Ubuntu 24.04 LTS must generate audit records for the use and modification of the lastlog file.-->
@@ -419,7 +419,7 @@
         <!--UBTU-24-900750: Ubuntu 24.04 LTS must generate audit records when successful/unsuccessful attempts to use the fdisk command.-->
         <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_fdisk" selected="true"/>
         <!--UBTU-24-900920: Ubuntu 24.04 LTS must allocate audit record storage capacity to store at least one week's worth of audit records, when audit records are not immediately sent to a central audit record storage facility.-->
-        <!-- decisions.yml override [UBTU-24-900920]: Because BOSH-deployed VMs are ephemeral, logs are forwarded to a remote syslog ingestor rather than retained locally at volume. --><select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_sufficiently_large_partition" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_sufficiently_large_partition" selected="true"/>
         <!--UBTU-24-900950: Ubuntu 24.04 LTS must have a crontab script running weekly to offload audit events of standalone systems.-->
         <select idref="xccdf_org.ssgproject.content_rule_auditd_offload_logs" selected="true"/>
         <!--UBTU-24-900960: Ubuntu 24.04 LTS must immediately notify the system administrator (SA) and information system security officer (ISSO) (at a minimum) when allocated audit record storage volume reaches 75 percent of the repository maximum audit record storage capacity.-->
@@ -453,8 +453,8 @@
         <!--UBTU-24-901380: Ubuntu 24.04 LTS must be configured so that the audit log directory is not write-accessible by unauthorized users.-->
         <select idref="xccdf_org.ssgproject.content_rule_directory_permissions_var_log_audit" selected="true"/>
         <!--UBTU-24-90890: Ubuntu 24.04 LTS must use cryptographic mechanisms to protect the integrity of audit tools.-->
-        <!-- decisions.yml override [UBTU-24-90890]: See package_aide_installed - AIDE lifecycle owned by aide-boshrelease. --><select idref="xccdf_org.ssgproject.content_rule_aide_check_audit_tools" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_aide_check_audit_tools" selected="true"/>
         <!--UBTU-24-909000: Ubuntu 24.04 LTS audit system must protect auditing rules from unauthorized change.-->
-        <!-- decisions.yml override [UBTU-24-909000]: Leaving this enabled invites a post-deploy ordering conflict: once the `-e 2` immutable flag is active, further audit rule changes are refused until reboot, so usg fix writing (or re-writing) audit rules after immutability is set can fail. usg fix owns audit.rules and already enforces 63 other audit_rules_* controls; excepting only the immutability flag keeps remediation idempotent across deploys. --><select idref="xccdf_org.ssgproject.content_rule_audit_rules_immutable" selected="false"/>
+        <select idref="xccdf_org.ssgproject.content_rule_audit_rules_immutable" selected="true"/>
     </Profile>
 </Tailoring>

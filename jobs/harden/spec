@@ -6,24 +6,6 @@ templates:
   files/etc/apt/sources.list.d/aws-ubuntu-mirrors.list: files/etc/apt/sources.list.d/aws-ubuntu-mirrors.list
   files/etc/apt/apt.conf.d/51unattended-upgrades-security: files/etc/apt/apt.conf.d/51unattended-upgrades-security
   files/etc/apt/apt.conf.d/20auto-upgrades: files/etc/apt/apt.conf.d/20auto-upgrades
-  files/etc/securetty: files/etc/securetty
-  files/etc/security/limits.conf: files/etc/security/limits.conf
-  files/etc/security/pwquality.conf: files/etc/security/pwquality.conf
-  files/etc/security/faillock.conf: files/etc/security/faillock.conf
-  files/etc/modprobe.d/18Fhardened.conf: files/etc/modprobe.d/18Fhardened.conf
-  files/etc/update-motd.d/00-header: files/etc/update-motd.d/00-header
-  files/etc/default/grub: files/etc/default/grub
-  files/etc/pam.d/common-auth: files/etc/pam.d/common-auth
-  files/etc/pam.d/su: files/etc/pam.d/su
-  files/etc/pam.d/common-password: files/etc/pam.d/common-password
-  files/etc/pam.d/login: files/etc/pam.d/login
-  files/etc/ssh/sshd_config: files/etc/ssh/sshd_config
-  files/etc/audit/audit.rules: files/etc/audit/audit.rules
-  files/etc/profile: files/etc/profile
-  files/etc/issue: files/etc/issue
-  files/etc/bash.bashrc: files/etc/bash.bashrc
-  files/etc/sysctl.conf: files/etc/sysctl.conf
-  files/etc/login.defs: files/etc/login.defs
   files/tailor.xml: files/tailor.xml
 packages: []
 properties: {}

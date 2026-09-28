@@ -33,21 +33,24 @@ decisions:
   # --- Log file / directory ownership and permissions needed by vcap/sysstat ---
   - rule: file_permissions_var_log
     action: disable
-    stig_ids: [UBTU-22-232025]
+    stig_ids: [UBTU-24-700120]
     rationale: >-
       Group "vcap" requires write permission on /var/log. Forcing mode 0755
       breaks BOSH job log writes.
 
-  - rule: permissions_local_var_log
+  # Renamed upstream: Jammy V1R1 'permissions_local_var_log' (UBTU-22-232026)
+  # became 'file_permissions_var_log_stig' (UBTU-24-700010) in the Noble
+  # benchmark. Identical STIG title/intent, so the decision carries over.
+  - rule: file_permissions_var_log_stig
     action: disable
-    stig_ids: [UBTU-22-232026]
+    stig_ids: [UBTU-24-700010]
     rationale: >-
       File /var/log/sysstat/sa<Number> has group write and global read for
       sysstat's system activity report (sar) to function.
 
   - rule: file_groupowner_var_log_syslog
     action: disable
-    stig_ids: [UBTU-22-232135]
+    stig_ids: [UBTU-24-700130]
     rationale: >-
       /var/log/syslog is intentionally group-owned by "syslog" (not "adm")
       on this platform.
@@ -55,7 +58,7 @@ decisions:
   # --- Firewall: ASGs + perimeter firewalls + iptables replace ufw ---
   - rule: package_ufw_installed
     action: disable
-    stig_ids: [UBTU-22-251010]
+    stig_ids: [UBTU-24-100300]
     rationale: >-
       Because IP addresses are dynamic in TAS, ufw cannot be used to limit
       traffic between hosts. Application Security Groups (ASGs) and
@@ -64,89 +67,335 @@ decisions:
 
   - rule: check_ufw_active
     action: disable
-    stig_ids: [UBTU-22-251015]
+    stig_ids: [UBTU-24-100310]
     rationale: >-
       See package_ufw_installed above -- ufw is not part of this
       architecture's network control model.
 
-  - rule: service_ufw_enabled
-    action: disable
-    stig_ids: [UBTU-22-251020]
+  # Note: Jammy V1R1 had a separate 'service_ufw_enabled' rule
+  # (UBTU-22-251020, "must have an application firewall enabled"). The Noble
+  # benchmark dropped that rule; UBTU-24-100300 now covers install + the
+  # var_network_filtering_service value instead. Disabling
+  # package_ufw_installed plus the set-value override below covers it.
+  - rule: var_network_filtering_service
+    action: accept
+    stig_ids: [UBTU-24-100300]
     rationale: >-
-      See package_ufw_installed above -- ufw is not part of this
-      architecture's network control model.
+      Left at the benchmark default ("ufw"). The ufw rules that consume this
+      value are all disabled below, so the value is inert; not worth diverging
+      from the upstream default.
 
   - rule: ufw_rate_limit
     action: disable
-    stig_ids: [UBTU-22-251025]
+    stig_ids: [UBTU-24-600200]
     rationale: >-
       Depends on ufw being in use; not applicable given the ASG/iptables
       model (see package_ufw_installed).
 
   - rule: ufw_only_required_services
     action: disable
-    stig_ids: [UBTU-22-251030]
+    stig_ids: [UBTU-24-300041]
     rationale: >-
       Depends on ufw being in use; not applicable given the ASG/iptables
       model (see package_ufw_installed).
 
-  # --- Password complexity: enforced via pam_cracklib in common-password ---
+  # --- Password complexity: pam_pwquality + cracklib dictionary ---
+  #
+  # NOTE: the source TAS/ubuntu.ckl comments for these controls claim
+  # enforcement happens via "pam_cracklib.so in /etc/pam.d/common-password".
+  # That describes VMware's stemcell, NOT this release. Per ADR-0002
+  # (0002-cracklib-runtime-required-harden-dependency-noble.md) this release
+  # uses the modern pam_pwquality (libpam-cracklib was correctly removed in
+  # PAM 1.5.0), and cracklib-runtime is required only because it BUILDS the
+  # dictionary that pwquality's dictcheck consumes. That ADR explicitly
+  # REJECTED disabling dictcheck as "trades a real security control for
+  # convenience". These three controls are therefore ACCEPTED (enforced),
+  # not disabled.
   - rule: package_pam_pwquality_installed
-    action: disable
-    stig_ids: [UBTU-22-215010]
+    action: accept
+    stig_ids: [UBTU-24-100600]
     rationale: >-
-      Stemcell uses pam_cracklib.so (via /etc/pam.d/common-password) to
-      enforce password complexity, not libpam-pwquality. Additionally, BOSH
-      SSH users are ephemeral and use key-based login, not password-based
-      login.
+      This release uses pam_pwquality per ADR-0002 (libpam-cracklib was
+      correctly removed in PAM 1.5.0). libpam-pwquality is a required
+      dependency, not an exception. usg fix now owns common-password
+      outright -- this release no longer ships a template for it.
 
   - rule: accounts_password_pam_dictcheck
-    action: disable
-    stig_ids: [UBTU-22-611030]
+    action: accept
+    stig_ids: [UBTU-24-300014]
     rationale: >-
-      Dictionary-word rejection is configured in /etc/pam.d/common-password
-      via pam_cracklib, not /etc/security/pwquality.conf.
+      dictcheck=1 is enforced. ADR-0002 explicitly rejected dictcheck=0 as
+      an unacceptable workaround; cracklib-runtime supplies the dictionary
+      that makes this control pass.
 
   - rule: accounts_password_pam_minlen
-    action: disable
-    stig_ids: [UBTU-22-611035]
+    action: accept
+    stig_ids: [UBTU-24-400320]
     rationale: >-
-      Minimum password length is configured in /etc/pam.d/common-password
-      via pam_cracklib, not /etc/security/pwquality.conf.
+      minlen=15 enforced per the STIG. usg fix owns pwquality.conf; this
+      release no longer ships a competing template (the old one specified
+      minlen=14, diverging from the control for no documented reason).
+
+  # --- Password COMPOSITION: accepted (enforced) ---
+  #
+  # These are pure configuration writes into pwquality.conf / login.defs with
+  # zero operational cost on this platform, because password *changes*
+  # essentially never happen here (see the ACCOUNT MODEL note below). They
+  # cost nothing and satisfy the control outright, so they are enforced
+  # rather than excepted. Recorded explicitly so the decision is auditable
+  # and does not silently regress on a future benchmark bump.
+  #
+  # ============================ ACCOUNT MODEL ============================
+  # Verified against upstream source, not inference:
+  #
+  #  * Only TWO real accounts exist on a BOSH stemcell: root and vcap
+  #    (uid 1000). bosh-linux-stemcell-builder
+  #    stemcell_builder/stages/bosh_users/apply.sh creates exactly these.
+  #  * `bosh ssh` users are EPHEMERAL and PASSWORDLESS: bosh-agent
+  #    agent/action/ssh.go calls CreateUser() + SetupSSH(publicKey) and never
+  #    sets a password; cleanupSSH does `userdel -rf`. Prefix "bosh_"
+  #    (settings/settings.go EphemeralUserPrefix).
+  #  * root and vcap passwords are LOCKED in practice: bosh-agent
+  #    agent/bootstrap.go setUserPasswords() sets them from env.bosh.password,
+  #    and platform/linux_platform.go SetUserPassword() substitutes "*"
+  #    (an invalid hash) when that value is empty.
+  #  * Password AUTH IS ALREADY OFF at the SSH layer: stemcell_builder
+  #    stages/base_ssh/apply.sh sets PasswordAuthentication no,
+  #    PermitRootLogin no, DenyUsers root, AllowGroups bosh_sshers,
+  #    PermitEmptyPasswords no, MaxAuthTries 3.
+  #
+  # The source TAS checklist reaches the same conclusion at UBTU-22-411020:
+  # "Stemcells use two system users, root and vcap ... not applicable because
+  # no other users are created on BOSH VMs."
+  #
+  # CONSEQUENCE: composition controls are free -> enforce them (here).
+  # Lifecycle/lockout controls are NOT free -> they endanger the only two
+  # accounts BOSH itself depends on -> excepted further below.
+  # =======================================================================
+
+  - rule: accounts_password_pam_ucredit
+    action: accept
+    stig_ids: [UBTU-24-400260]
+    rationale: "ucredit=-1 already matches this release's pwquality.conf. Free to enforce."
+
+  - rule: accounts_password_pam_lcredit
+    action: accept
+    stig_ids: [UBTU-24-400270]
+    rationale: "lcredit=-1 already matches this release's pwquality.conf. Free to enforce."
+
+  - rule: accounts_password_pam_dcredit
+    action: accept
+    stig_ids: [UBTU-24-400280]
+    rationale: "dcredit=-1 already matches this release's pwquality.conf. Free to enforce."
+
+  - rule: accounts_password_pam_ocredit
+    action: accept
+    stig_ids: [UBTU-24-400330]
+    rationale: "ocredit=-1 already matches this release's pwquality.conf. Free to enforce."
+
+  - rule: accounts_password_pam_difok
+    action: accept
+    stig_ids: [UBTU-24-400290]
+    rationale: >-
+      difok=8 is NOT currently set in this release's pwquality.conf; usg fix
+      will add it. Accepted rather than excepted -- it is a no-cost config
+      write given password changes do not occur on these VMs.
+
+  - rule: accounts_password_pam_retry
+    action: accept
+    stig_ids: [UBTU-24-300016]
+    rationale: "retry=3 matches the existing pam_pwquality.so retry=3 in common-password."
+
+  - rule: accounts_password_pam_enforcing
+    action: accept
+    stig_ids: [UBTU-24-300016]
+    rationale: "enforcing=1 -- pwquality is already a requisite module in common-password."
+
+  - rule: accounts_password_pam_unix_rounds_password_auth
+    action: accept
+    stig_ids: [UBTU-24-400220]
+    rationale: >-
+      rounds=100000 for pam_unix. Not currently set in this release; usg fix
+      will add it. Strengthens stored-hash cost at no operational cost.
+
+  - rule: set_password_hashing_algorithm_auth_stig
+    action: accept
+    stig_ids: [UBTU-24-400220]
+    rationale: "FIPS-approved hashing in the PAM stack. Consistent with ENCRYPT_METHOD SHA512."
+
+  - rule: set_password_hashing_algorithm_logindefs
+    action: accept
+    stig_ids: [UBTU-24-400400]
+    rationale: >-
+      FIPS 140-3 approved hashing in login.defs. This release already sets
+      ENCRYPT_METHOD SHA512, which passed the Increment 1 usg audit.
+
+  - rule: no_empty_passwords
+    action: accept
+    stig_ids: [UBTU-24-300028]
+    rationale: "No null passwords in PAM. Always correct; nothing on this platform needs them."
+
+  - rule: no_empty_passwords_etc_shadow
+    action: accept
+    stig_ids: [UBTU-24-300027]
+    rationale: "No null passwords in /etc/shadow. Always correct."
+
+  - rule: sshd_disable_empty_passwords
+    action: accept
+    stig_ids: [UBTU-24-300031]
+    rationale: >-
+      PermitEmptyPasswords no -- the stemcell's own base_ssh stage already
+      sets this. usg fix agrees with the platform baseline.
+
+  - rule: accounts_minimum_age_login_defs
+    action: accept
+    stig_ids: [UBTU-24-400300]
+    rationale: >-
+      PASS_MIN_DAYS 1 already matches this release's login.defs. Free to
+      enforce. (Contrast accounts_maximum_age_login_defs, excepted below.)
+
+  - rule: accounts_passwords_pam_faildelay_delay
+    action: accept
+    stig_ids: [UBTU-24-300017]
+    rationale: >-
+      4-second delay between failed logon prompts. Harmless on a platform
+      with no interactive password logins; no reason to except it.
+
+  # --- Password LIFECYCLE / LOCKOUT: excepted (hostile to the BOSH model) ---
+  #
+  # Unlike composition above, these controls carry real operational risk on a
+  # VM whose only two accounts (root, vcap) are locked service accounts that
+  # BOSH itself depends on. See the ACCOUNT MODEL note above.
+  #
+  # ACCOUNT LOCKOUT (AC-7) -- ACCEPTED GAP, decided 2026-09-24
+  # ==========================================================
+  # All five faillock rules are disabled, and this release no longer ships a
+  # files/etc/security/faillock.conf or files/etc/pam.d/common-auth template.
+  # The practical result is NO ACCOUNT-LOCKOUT CONTROL on these VMs. This is a
+  # deliberate, documented acceptance, not an oversight:
+  #
+  #   * It is not a regression. Those templates stopped being applied at
+  #     commit 27c1ca9 (which removed the `cp` calls in favour of `usg fix`),
+  #     so lockout has already been absent on deployed VMs since then.
+  #   * The threat it mitigates -- online password guessing -- does not exist
+  #     here. sshd sets PasswordAuthentication no, root and vcap are the only
+  #     accounts and both have locked password hashes ("*"), and `bosh ssh`
+  #     users authenticate with an ephemeral SSH key and are deleted after
+  #     use. There is no password prompt to brute force.
+  #   * The STIG's own values are actively dangerous on this platform:
+  #     deny=3 with unlock_time=0 means three failures permanently locks an
+  #     account until an administrator intervenes -- applied to the two
+  #     service accounts BOSH needs to operate the VM.
+  #
+  # If an assessor requires AC-7 coverage, the fix is to re-enable these five
+  # rules and add set-value overrides for deny / fail_interval / unlock_time
+  # (e.g. 5 / 900 / 900, the values live-verified in Increment 1) so that usg
+  # owns faillock.conf outright -- do NOT reintroduce a hand-maintained
+  # faillock.conf alongside it, which is what caused the split-configuration
+  # defect in Increment 1 §B4b.1.
+
+  - rule: accounts_passwords_pam_faillock_deny
+    action: disable
+    stig_ids: [UBTU-24-200610]
+    rationale: >-
+      Accepted AC-7 gap -- see the ACCOUNT LOCKOUT note above. No password
+      authentication path exists to brute force, and the STIG deny=3 paired
+      with unlock_time=0 risks permanently locking root/vcap.
+
+  - rule: accounts_passwords_pam_faillock_unlock_time
+    action: disable
+    stig_ids: [UBTU-24-200610]
+    rationale: >-
+      STIG wants unlock_time=0, i.e. NEVER auto-unlock until an administrator
+      releases the account. On a BOSH VM the only accounts are root and vcap
+      -- the service accounts BOSH itself needs -- so a permanent lock is a
+      self-inflicted denial of service with no operator expecting to unlock
+      it. See the ACCOUNT LOCKOUT note above.
+
+  - rule: accounts_passwords_pam_faillock_interval
+    action: disable
+    stig_ids: [UBTU-24-200610]
+    rationale: "Part of the same faillock block. See the ACCOUNT LOCKOUT note above."
+
+  - rule: accounts_passwords_pam_faillock_audit
+    action: disable
+    stig_ids: [UBTU-24-200610]
+    rationale: "Part of the same faillock block. See the ACCOUNT LOCKOUT note above."
+
+  - rule: accounts_passwords_pam_faillock_silent
+    action: disable
+    stig_ids: [UBTU-24-200610]
+    rationale: "Part of the same faillock block. See the ACCOUNT LOCKOUT note above."
+
+  - rule: accounts_maximum_age_login_defs
+    action: disable
+    stig_ids: [UBTU-24-400310]
+    rationale: >-
+      STIG wants PASS_MAX_DAYS 60; this release uses 90. Password expiry is
+      meaningless on two locked service accounts that never authenticate by
+      password, and an expiring vcap password is a live hazard to BOSH
+      operations rather than a security gain. PASS_MIN_DAYS (1) is still
+      enforced -- see accounts_minimum_age_login_defs.
+
+  - rule: account_disable_post_pw_expiration
+    action: disable
+    stig_ids: [UBTU-24-200260]
+    rationale: >-
+      Disabling identifiers after 35 days of inactivity is actively dangerous
+      here: vcap is a service account that never "logs in", and `bosh ssh`
+      users live for minutes before `userdel -rf`. Applying this risks
+      disabling the account BOSH runs every job as.
+
+  - rule: accounts_tmout
+    action: disable
+    stig_ids: [UBTU-24-200060]
+    rationale: >-
+      CONFLICT, not preference: the Noble stemcell ships
+      /etc/profile.d/01-tmout.sh with `readonly TMOUT=900`, and this release
+      declares it readonly. usg fix writing a second TMOUT=600 would attempt
+      to reassign a readonly shell variable ("TMOUT: readonly variable")
+      every login. The control's intent (idle session timeout) is already
+      met at 900s by the platform itself.
 
   # --- Chrony maxpoll: already fixed at value 16 in gold tailoring ---
   - rule: chronyd_or_ntpd_set_maxpoll
     action: accept
-    stig_ids: [UBTU-22-252010]
+    stig_ids: [UBTU-24-600160]
     rationale: >-
       Gold tailoring already sets var_time_service_set_maxpoll=16
       (down from the chrony.conf package default of 10). The ckl "Open"
       finding predates this fix; no further action needed.
 
   # --- umask 077 breaks runC container runtime ---
+  # NOTE: the TAS/ubuntu.ckl comment for this control claims "expected umask is
+  # 077, the actual is 022. This umask is required for the container runtime
+  # runC to function correctly." That is VMware's stemcell, NOT this release.
+  # Increment 1 (fisma-noble-increment1-edits.md §B4c) explicitly reviewed
+  # this release's login.defs and confirmed "L151 UMASK 077 OK" -- i.e. 077
+  # was already this baseline's deliberate choice and the STIG control agrees
+  # with it. accept, do not disable. (login.defs is now owned by usg fix.)
   - rule: accounts_umask_etc_login_defs
-    action: disable
-    stig_ids: [UBTU-22-412035]
+    action: accept
+    stig_ids: [UBTU-24-300030]
     rationale: >-
-      This harden job is applied broadly across BOSH-deployed VM types,
-      including compute/diego cells that run the runC container runtime,
-      which requires umask 022 to function. Forcing 077 in /etc/login.defs
-      breaks container creation.
+      UMASK 077 matches the STIG value and was confirmed for this baseline in
+      Increment 1 §B4c. The runC/022 exception in the source TAS checklist
+      describes VMware's stemcell and does not apply to this release.
 
   # --- Passwordless sudo is core to the BOSH SSH access model ---
   - rule: sudo_require_authentication
     action: disable
-    stig_ids: [UBTU-22-432010]
+    stig_ids: [UBTU-24-300021]
     rationale: >-
       BOSH SSH uses key-based login; ssh users are granted passwordless
       sudo by design. Forcing sudo reauthentication breaks the BOSH SSH
-      access model. (UBTU-22-432015 / ensure_sudo_group_restricted is
+      access model. (UBTU-24-600130 / ensure_sudo_group_restricted is
       unaffected and remains enabled.)
 
   # --- AIDE / file integrity: owned by the separate aide-boshrelease ---
   - rule: package_aide_installed
     action: disable
-    stig_ids: [UBTU-22-651010]
+    stig_ids: [UBTU-24-100100]
     rationale: >-
       AIDE installation and configuration is owned by the separate
       aide-boshrelease deployed alongside this release. Managing it here
@@ -155,27 +404,27 @@ decisions:
 
   - rule: aide_build_database
     action: disable
-    stig_ids: [UBTU-22-651015]
+    stig_ids: [UBTU-24-100110]
     rationale: "See package_aide_installed -- AIDE lifecycle owned by aide-boshrelease."
 
   - rule: aide_disable_silentreports
     action: disable
-    stig_ids: [UBTU-22-651020]
+    stig_ids: [UBTU-24-100130]
     rationale: "See package_aide_installed -- AIDE lifecycle owned by aide-boshrelease."
 
   - rule: aide_periodic_cron_checking
     action: disable
-    stig_ids: [UBTU-22-651025]
+    stig_ids: [UBTU-24-100120]
     rationale: "See package_aide_installed -- AIDE lifecycle owned by aide-boshrelease."
 
   - rule: aide_check_audit_tools
     action: disable
-    stig_ids: [UBTU-22-651030]
+    stig_ids: [UBTU-24-90890]
     rationale: "See package_aide_installed -- AIDE lifecycle owned by aide-boshrelease."
 
   - rule: auditd_audispd_configure_remote_server
     action: disable
-    stig_ids: [UBTU-22-653020]
+    stig_ids: [UBTU-24-100450]
     rationale: >-
       Audit event multiplexor (audispd) is not installed on stemcells.
       Log forwarding to a remote syslog ingestor is handled outside this
@@ -183,12 +432,12 @@ decisions:
 
   - rule: package_audit-audispd-plugins_installed
     action: disable
-    stig_ids: [UBTU-22-653020]
+    stig_ids: [UBTU-24-100450]
     rationale: "See auditd_audispd_configure_remote_server above."
 
   - rule: auditd_audispd_configure_sufficiently_large_partition
     action: disable
-    stig_ids: [UBTU-22-653035]
+    stig_ids: [UBTU-24-900920]
     rationale: >-
       Because BOSH-deployed VMs are ephemeral, logs are forwarded to a
       remote syslog ingestor rather than retained locally at volume.
@@ -196,104 +445,108 @@ decisions:
   # --- DOD PKI / smart-card MFA: not supported on stemcells ---
   - rule: only_allow_dod_certs
     action: disable
-    stig_ids: [UBTU-22-631010]
+    stig_ids: [UBTU-24-600060]
     rationale: >-
       No DOD PKI / smart-card authentication path exists on BOSH stemcells;
       SSH access is key-based, not certificate-based via DOD-issued CAs.
 
   - rule: sssd_offline_cred_expiration
     action: disable
-    stig_ids: [UBTU-22-631015]
+    stig_ids: [UBTU-24-400340]
     rationale: >-
       Only applicable if smart card authentication is in use. Stemcells do
       not support multifactor authentication.
 
   - rule: install_smartcard_packages
     action: disable
-    stig_ids: [UBTU-22-612010]
+    stig_ids: [UBTU-24-100910]
     rationale: "Stemcells do not support multifactor authentication."
 
   - rule: package_opensc_installed
     action: disable
-    stig_ids: [UBTU-22-612015]
+    stig_ids: [UBTU-24-100900]
     rationale: "Stemcells do not support multifactor authentication."
 
   - rule: smartcard_pam_enabled
     action: disable
-    stig_ids: [UBTU-22-612020]
+    stig_ids: [UBTU-24-400020]
     rationale: >-
       Stemcells do not support multifactor authentication.
-      sshd_enable_pubkey_auth (also selected under UBTU-22-612020 in the
-      gold tailoring file) remains enabled -- BOSH SSH access depends on
-      SSH public-key authentication independent of smart-card MFA.
+      sshd_enable_pubkey_auth (UBTU-24-400030) remains enabled -- BOSH SSH
+      access depends on SSH public-key authentication independent of
+      smart-card MFA.
 
   - rule: smartcard_configure_cert_checking
     action: disable
-    stig_ids: [UBTU-22-612025]
+    stig_ids: [UBTU-24-400060]
     rationale: "Stemcells do not support multifactor authentication."
 
   - rule: smartcard_configure_ca
     action: disable
-    stig_ids: [UBTU-22-612030]
+    stig_ids: [UBTU-24-400375]
     rationale: "Stemcells do not support multifactor authentication."
 
   - rule: smartcard_configure_crl
     action: disable
-    stig_ids: [UBTU-22-612035]
+    stig_ids: [UBTU-24-400380]
     rationale: "Stemcells do not support multifactor authentication."
 
-  - rule: verify_use_mappers
+  # Renamed upstream: Jammy V1R1 'verify_use_mappers' (UBTU-22-612040) was
+  # replaced in the Noble benchmark by 'sssd_enable_user_cert'
+  # (UBTU-24-400370) -- same STIG title ("must map the authenticated identity
+  # to the user or group account for PKI-based authentication").
+  - rule: sssd_enable_user_cert
     action: disable
-    stig_ids: [UBTU-22-612040]
+    stig_ids: [UBTU-24-400370]
     rationale: "Stemcells do not support multifactor authentication."
 
   # --- GNOME/GUI: stemcells have no graphical desktop installed ---
   - rule: dconf_gnome_banner_enabled
     action: disable
-    stig_ids: [UBTU-22-271010]
+    stig_ids: [UBTU-24-200650]
     rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
 
   - rule: dconf_gnome_login_banner_text
     action: disable
-    stig_ids: [UBTU-22-271015]
+    stig_ids: [UBTU-24-200660]
     rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
 
   - rule: dconf_gnome_screensaver_lock_enabled
     action: disable
-    stig_ids: [UBTU-22-271020]
+    stig_ids: [UBTU-24-200040]
     rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
 
   - rule: dconf_gnome_screensaver_idle_delay
     action: disable
-    stig_ids: [UBTU-22-271025]
+    stig_ids: [UBTU-24-200020]
     rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
 
   - rule: dconf_gnome_screensaver_lock_delay
     action: disable
-    stig_ids: [UBTU-22-271025]
+    stig_ids: [UBTU-24-200020]
     rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
 
   - rule: dconf_gnome_disable_ctrlaltdel_reboot
     action: disable
-    stig_ids: [UBTU-22-271030]
+    stig_ids: [UBTU-24-300025]
     rationale: "GNOME is a GUI for Ubuntu. Stemcells do not have the GNOME package installed."
 
   # --- Misc no-ops / IaaS-handled items ---
   - rule: wireless_disable_interfaces
     action: disable
-    stig_ids: [UBTU-22-291015]
+    stig_ids: [UBTU-24-600230]
     rationale: >-
       Not applicable: the system has no physical wireless network radios
       present.
 
   - rule: account_temp_expire_date
     action: disable
-    stig_ids: [UBTU-22-411040]
+    stig_ids: [UBTU-24-200250]
     rationale: "Stemcells do not have temporary accounts."
 
   - rule: vlock_installed
     action: disable
-    stig_ids: [UBTU-22-412025]
+    stig_ids: [UBTU-24-101000]
     rationale: >-
       A session lock is a temporary action for a user stepping away from
       an interactive terminal; not applicable to ephemeral, non-interactive
@@ -301,15 +554,242 @@ decisions:
 
   - rule: audit_rules_execution_chacl
     action: disable
-    stig_ids: [UBTU-22-654015]
+    stig_ids: [UBTU-24-900240]
     rationale: "File /usr/bin/chacl does not exist on stemcells."
 
   - rule: audit_rules_execution_setfacl
     action: disable
-    stig_ids: [UBTU-22-654085]
+    stig_ids: [UBTU-24-900230]
     rationale: "File /usr/bin/setfacl does not exist on stemcells."
 
   - rule: encrypt_partitions
     action: disable
-    stig_ids: [UBTU-22-231010]
+    stig_ids: [UBTU-24-600090]
     rationale: "Disk encryption is handled by the IaaS."
+
+  # =====================================================================
+  # Noble V1R6 additions -- rules that did not exist in the Jammy V1R1
+  # benchmark this release originally tailored against. Decided
+  # 2026-09-24 after auditing the 21 new rules.
+  # =====================================================================
+
+  # --- SSH consent-banner prompt: blocks interactive `bosh ssh` ---
+  - rule: banner_etc_profiled_ssh_confirm
+    action: disable
+    stig_ids: [UBTU-24-200680]
+    rationale: >-
+      This control requires a script in /etc/profile.d containing an
+      interactive `read -p "... Do you agree? [y/N] "` loop that exits 1 on
+      anything but yes. An interactive `bosh ssh` session is a LOGIN shell,
+      so /etc/profile.d IS sourced and every operator session would block on
+      a prompt (and any tooling that opens an interactive shell would hang).
+      The DOD notice-and-consent requirement is still met non-interactively
+      by sshd_enable_warning_banner_net (UBTU-24-200640, Banner
+      /etc/issue.net), which remains ENABLED -- the stemcell's own base_ssh
+      stage already sets `Banner /etc/issue.net`.
+
+  # --- audit rules immutability: already satisfied on disk ---
+  - rule: audit_rules_immutable
+    action: disable
+    stig_ids: [UBTU-24-909000]
+    rationale: >-
+      Leaving this enabled invites a post-deploy ordering conflict: once the
+      `-e 2` immutable flag is active, further audit rule changes are refused
+      until reboot, so usg fix writing (or re-writing) audit rules after
+      immutability is set can fail. usg fix owns audit.rules and already
+      enforces 63 other audit_rules_* controls; excepting only the
+      immutability flag keeps remediation idempotent across deploys.
+
+  # --- Time sync: the BOSH agent owns chrony configuration ---
+  #
+  # Verified in bosh-linux-stemcell-builder stages/bosh_ntp: the stemcell
+  # strips `pool` lines from chrony.conf and installs `chrony-updater` as
+  # /var/vcap/bosh/bin/sync-time. The agent writes NTP servers to
+  # /var/vcap/bosh/etc/ntpserver (bosh-agent platform/linux_platform.go
+  # SetTimeWithNtpServers) and chrony-updater renders them into
+  # /etc/chrony/sources.d/bosh.sources, then runs `chronyc reload sources`.
+  # Time servers are therefore deployment configuration (env.bosh.ntp), not
+  # something a hardening job should hardcode.
+  - rule: chronyd_server_directive
+    action: disable
+    stig_ids: [UBTU-24-600160]
+    rationale: >-
+      The BOSH agent owns time configuration via
+      /etc/chrony/sources.d/bosh.sources (written by chrony-updater from
+      env.bosh.ntp). usg fix adding a competing `server` directive to
+      chrony.conf would fight the agent on every deploy.
+
+  - rule: chronyd_specify_remote_server
+    action: disable
+    stig_ids: [UBTU-24-600160]
+    rationale: >-
+      Gold value is var_multiple_time_servers=0.us.pool.ntp.mil, which is
+      not reachable from this environment and is not the authoritative
+      source for this deployment. Time servers come from env.bosh.ntp via
+      the agent. Note chronyd_or_ntpd_set_maxpoll remains ACCEPTED (16) --
+      maxpoll is a chrony.conf tunable the agent does not manage.
+
+  # --- SSSD family: the MFA mechanism under a new name ---
+  #
+  # UBTU-24-100660 is titled "must use the SSSD package for multifactor
+  # authentication services" -- identical rationale to the smart-card /
+  # PKI family already excepted above: BOSH stemcells do not support MFA.
+  # Additionally, enabling an unconfigured sssd service risks a
+  # crash-looping unit on every VM (no identity provider to talk to).
+  - rule: package_sssd_installed
+    action: disable
+    stig_ids: [UBTU-24-100650]
+    rationale: >-
+      SSSD is the STIG's multifactor authentication mechanism
+      (UBTU-24-100660). Stemcells do not support MFA; only root and vcap
+      exist and `bosh ssh` users authenticate by ephemeral SSH key.
+
+  - rule: package_nss_sss_installed
+    action: disable
+    stig_ids: [UBTU-24-100650]
+    rationale: "See package_sssd_installed -- no MFA/identity provider on stemcells."
+
+  - rule: package_pam_sss_installed
+    action: disable
+    stig_ids: [UBTU-24-100650]
+    rationale: "See package_sssd_installed -- no MFA/identity provider on stemcells."
+
+  - rule: service_sssd_enabled
+    action: disable
+    stig_ids: [UBTU-24-100660]
+    rationale: >-
+      Enabling sssd with no identity provider configured risks a
+      crash-looping systemd unit on every BOSH VM, for a mechanism this
+      platform does not use.
+
+  - rule: sssd_enable_pam_services
+    action: disable
+    stig_ids: [UBTU-24-400360]
+    rationale: >-
+      Wiring SSSD into the PAM stack is an authentication-path change for a
+      mechanism not in use. Modifying PAM unnecessarily risks the
+      login-breakage class of defect seen in Increment 1 (§B4b.0).
+
+  - rule: sssd_enable_smartcards
+    action: disable
+    stig_ids: [UBTU-24-400360]
+    rationale: "Stemcells do not support multifactor authentication (smart card)."
+
+  - rule: sssd_certification_path_trust_anchor
+    action: disable
+    stig_ids: [UBTU-24-400360]
+    rationale: >-
+      PKI certification-path validation is only meaningful with smart-card /
+      PKI authentication, which this platform does not use.
+
+  # --- pam_lastlog was REMOVED upstream in PAM 1.5.3 (Noble ships 1.5.3) ---
+  - rule: display_login_attempts
+    action: disable
+    stig_ids: [UBTU-24-300024]
+    rationale: >-
+      This control configures pam_lastlog, which upstream PAM REMOVED in
+      1.5.3; Ubuntu 24.04 ships PAM 1.5.3 with pam_lastlog2 as the
+      replacement. If usg fix writes a `required` pam_lastlog.so line and the
+      module is absent, every login fails. Excepted as a platform
+      compatibility risk. Revisit if a future benchmark targets
+      pam_lastlog2.
+
+  # --- AIDE: lifecycle owned by the separate aide-boshrelease ---
+  - rule: aide_periodic_checking_systemd_timer
+    action: disable
+    stig_ids: [UBTU-24-100120]
+    rationale: >-
+      New in the Noble benchmark, same family as the AIDE rules excepted
+      above. AIDE installation, configuration, and scheduling are owned by
+      the separate aide-boshrelease deployed alongside this release; a usg
+      systemd timer would duplicate or conflict with its scheduling.
+
+  # --- Remaining Noble additions: accepted (low risk, no platform conflict) ---
+  - rule: file_groupownership_audit_binaries
+    action: accept
+    stig_ids: [UBTU-24-901250]
+    rationale: >-
+      Group ownership of audit binaries. A straightforward permission fix
+      with no BOSH interaction; the sibling rules
+      file_permissions_audit_binaries / file_ownership_audit_binaries are
+      already enforced.
+
+  - rule: ssh_client_use_approved_ciphers_ordered_stig
+    action: accept
+    stig_ids: [UBTU-24-100850]
+    rationale: >-
+      Client-side /etc/ssh/ssh_config crypto. This release ships no
+      ssh_config (only sshd_config), so there is nothing to conflict with,
+      and BOSH does not rely on the on-box SSH *client* for its control
+      plane (the director connects inbound to sshd).
+
+  - rule: ssh_use_approved_macs_ordered_stig
+    action: accept
+    stig_ids: [UBTU-24-100860]
+    rationale: >-
+      Client-side MACs, same reasoning as
+      ssh_client_use_approved_ciphers_ordered_stig. NOTE: the shared
+      ssh_approved_macs value drops umac-128, which the BOSH stemcell
+      baseline offers -- see the ssh_approved_macs set-value override below.
+
+  - rule: installed_OS_is_vendor_supported
+    action: accept
+    stig_ids: [UBTU-24-700400]
+    rationale: >-
+      Documentation/no-op check that the release is vendor-supported. Ubuntu
+      Noble 24.04 LTS is supported to April 2029 (BOSH stemcell line is
+      current), so this should pass without remediation action.
+
+  # --- sshd_config values: preserve the BOSH stemcell defaults ---
+  #
+  # usg fix rewrites /etc/ssh/sshd_config. Where the STIG value diverges from
+  # the value the BOSH stemcell itself ships (bosh-linux-stemcell-builder
+  # stemcell_builder/stages/base_ssh/apply.sh, ubuntu-noble branch), we keep
+  # the STEMCELL value so hardening works WITH the platform baseline rather
+  # than drifting from it. The rules stay ENABLED (so the control is still
+  # enforced and auditable) -- only the value is overridden.
+  #
+  # Stemcell base_ssh ships:
+  #   ClientAliveInterval 180
+  #   ClientAliveCountMax 1
+  #   MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,
+  #        umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,
+  #        umac-128@openssh.com
+
+  - rule: sshd_idle_timeout_value
+    action: set-value
+    value: 180
+    stig_ids: [UBTU-24-600010]
+    rationale: >-
+      STIG default is ClientAliveInterval 600; the BOSH stemcell ships 180.
+      Keeping 180 preserves the platform baseline and is STRICTER than the
+      STIG requires, so the control is still satisfied.
+
+  - rule: sshd_set_keepalive
+    action: accept
+    stig_ids: [UBTU-24-600000]
+    rationale: >-
+      ClientAliveCountMax 1. The STIG value, the Jammy V1R1 value, and the
+      BOSH stemcell default (base_ssh/apply.sh) are ALL 1, so no override is
+      needed.
+
+      This release's now-removed sshd_config carried CountMax 0, which was a
+      pre-usg hand-rolled value (commit dd40d62, before STIG adoption) and
+      was WRONG on both Jammy and Noble: per ComplianceAsCode, OpenSSH >= 8.2
+      treats CountMax 0 as DISABLING the inactivity timeout entirely (only on
+      pre-8.2 did 0 mean "time out exactly at ClientAliveInterval"). Jammy
+      ships OpenSSH 8.9 and Noble ships 9.6, so 0 disabled the very control
+      UBTU-24-600000 requires. Taking 1 restores it.
+
+  - rule: ssh_approved_macs
+    action: set-value
+    value: hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
+    stig_ids: [UBTU-24-100830, UBTU-24-100860]
+    rationale: >-
+      STIG default drops umac-128-etm@openssh.com and umac-128@openssh.com,
+      which the BOSH stemcell baseline (base_ssh/apply.sh) offers. Removing
+      them is a client-compatibility surface change with no corresponding
+      benefit (umac-128 is not a weak MAC -- the STIG list is simply
+      narrower). This value feeds both the server rule
+      (sshd_use_approved_macs_ordered_stig) and the client rule
+      (ssh_use_approved_macs_ordered_stig); both remain ENABLED.

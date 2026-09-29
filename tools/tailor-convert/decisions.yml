@@ -892,3 +892,20 @@ decisions:
       group (%bosh_sudoers ALL=(ALL) NOPASSWD: ALL in the stemcell's
       sudoers), and vcap is a member of `admin`, not `sudo`. Manual review
       position: sudo group membership is minimal by construction.
+
+  # --- BIOS vs UEFI bootloader password: notapplicable, not failed ---
+  - rule: grub2_password
+    action: accept
+    stig_ids: [UBTU-24-100210]
+    rationale: >-
+      Live audit: "notapplicable". This rule targets the BIOS/legacy-boot GRUB
+      password (/boot/grub/grub.cfg); the AWS Noble stemcell boots UEFI, so the
+      rule's applicability check excludes it. The UEFI counterpart
+      grub2_uefi_password (same control) is ENABLED and PASSES, so the control
+      itself is satisfied -- this is the mutually-exclusive sibling rule
+      reporting that it does not apply to this boot mode.
+
+      Kept ENABLED rather than disabled: on a hypothetical BIOS-boot stemcell
+      this rule SHOULD apply and be enforced, and "notapplicable" is a correct,
+      self-documenting audit result rather than a gap. Disabling it would hide
+      a real finding if the boot mode ever changed.

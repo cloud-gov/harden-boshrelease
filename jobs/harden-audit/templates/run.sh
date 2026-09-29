@@ -103,11 +103,16 @@ TXT="${REPORT_DIR}/usg-audit-${STAMP}.txt"
 
 # usg exits non-zero whenever the scan finds any failure, which is normal for an
 # audit. Capture its status but judge the run on the report, not the exit code.
+#
+# Output goes ONLY to ${TXT}, deliberately not to stdout: usg prints a 4-line
+# block per rule and this profile evaluates ~170 rules, so echoing it here
+# buries the summary below and pushes towards BOSH's 1 MB errand output cap.
+# The summary below is the errand's output; ${TXT} is the full detail on disk.
 usg audit \
   --tailoring-file "${TAILORING}" \
   --html-file      "${HTML}" \
   --results-file   "${XML}" \
-  > >(tee "${TXT}") 2>&1
+  > "${TXT}" 2>&1
 rc=$?
 
 chmod 0600 "${HTML}" "${XML}" "${TXT}" 2>/dev/null || true
@@ -133,12 +138,19 @@ echo "  fail          : ${fail}"
 echo "  notchecked    : ${notchecked}"
 echo "  notapplicable : ${notapplicable}"
 echo
+# NOTE on paths: /var/vcap/sys is a symlink to /var/vcap/data/sys on a BOSH VM,
+# so usg's own completion message (which resolves the link) prints
+# /var/vcap/data/sys/log/... for the same files listed here. Same files.
 echo "  HTML report   : ${HTML}"
 echo "  XCCDF results : ${XML}"
 echo "  Raw output    : ${TXT}"
 echo "==================================================="
 
-if (( fail > 0 )); then
+# List anything that did not pass. Driven by fail + notchecked rather than fail
+# alone: a "notchecked" rule has no automated OVAL check and needs manual
+# review, so silently omitting it would hide required work. "notapplicable" is
+# included in the listing for completeness when it appears alongside the others.
+if (( fail > 0 || notchecked > 0 )); then
   echo
   echo "NON-PASSING RULES:"
   # Pair each "Rule <id>" with the "Result <x>" line that follows it.

@@ -211,13 +211,6 @@ decisions:
     stig_ids: [UBTU-24-300016]
     rationale: "enforcing=1 -- pwquality is already a requisite module in common-password."
 
-  - rule: accounts_password_pam_unix_rounds_password_auth
-    action: accept
-    stig_ids: [UBTU-24-400220]
-    rationale: >-
-      rounds=100000 for pam_unix. Not currently set in this release; usg fix
-      will add it. Strengthens stored-hash cost at no operational cost.
-
   - rule: set_password_hashing_algorithm_auth_stig
     action: accept
     stig_ids: [UBTU-24-400220]
@@ -253,13 +246,6 @@ decisions:
     rationale: >-
       PASS_MIN_DAYS 1 already matches this release's login.defs. Free to
       enforce. (Contrast accounts_maximum_age_login_defs, excepted below.)
-
-  - rule: accounts_passwords_pam_faildelay_delay
-    action: accept
-    stig_ids: [UBTU-24-300017]
-    rationale: >-
-      4-second delay between failed logon prompts. Harmless on a platform
-      with no interactive password logins; no reason to except it.
 
   # --- Password LIFECYCLE / LOCKOUT: excepted (hostile to the BOSH model) ---
   #
@@ -356,15 +342,6 @@ decisions:
       to reassign a readonly shell variable ("TMOUT: readonly variable")
       every login. The control's intent (idle session timeout) is already
       met at 900s by the platform itself.
-
-  # --- Chrony maxpoll: already fixed at value 16 in gold tailoring ---
-  - rule: chronyd_or_ntpd_set_maxpoll
-    action: accept
-    stig_ids: [UBTU-24-600160]
-    rationale: >-
-      Gold tailoring already sets var_time_service_set_maxpoll=16
-      (down from the chrony.conf package default of 10). The ckl "Open"
-      finding predates this fix; no further action needed.
 
   # --- umask 077 breaks runC container runtime ---
   # NOTE: the TAS/ubuntu.ckl comment for this control claims "expected umask is
@@ -626,8 +603,10 @@ decisions:
       Gold value is var_multiple_time_servers=0.us.pool.ntp.mil, which is
       not reachable from this environment and is not the authoritative
       source for this deployment. Time servers come from env.bosh.ntp via
-      the agent. Note chronyd_or_ntpd_set_maxpoll remains ACCEPTED (16) --
-      maxpoll is a chrony.conf tunable the agent does not manage.
+      the agent. NOTE: chronyd_or_ntpd_set_maxpoll is ALSO excepted (see the
+      post-deployment reconciliation section) -- live audit proved the agent
+      rewrites sources.d without maxpoll, so usg cannot hold that value
+      either.
 
   # --- SSSD family: the MFA mechanism under a new name ---
   #
@@ -723,15 +702,6 @@ decisions:
       and BOSH does not rely on the on-box SSH *client* for its control
       plane (the director connects inbound to sshd).
 
-  - rule: ssh_use_approved_macs_ordered_stig
-    action: accept
-    stig_ids: [UBTU-24-100860]
-    rationale: >-
-      Client-side MACs, same reasoning as
-      ssh_client_use_approved_ciphers_ordered_stig. NOTE: the shared
-      ssh_approved_macs value drops umac-128, which the BOSH stemcell
-      baseline offers -- see the ssh_approved_macs set-value override below.
-
   - rule: installed_OS_is_vendor_supported
     action: accept
     stig_ids: [UBTU-24-700400]
@@ -781,15 +751,144 @@ decisions:
       ships OpenSSH 8.9 and Noble ships 9.6, so 0 disabled the very control
       UBTU-24-600000 requires. Taking 1 restores it.
 
-  - rule: ssh_approved_macs
-    action: set-value
-    value: hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
-    stig_ids: [UBTU-24-100830, UBTU-24-100860]
+  # ssh_approved_macs: NO set-value override is possible here.
+  #
+  # Verified empirically 2026-09-29 (live `sshd -T` showed umac-128 absent
+  # despite a set-value override) and confirmed in upstream source: the
+  # *_ordered_stig rules HARDCODE the MAC list at content BUILD time via
+  # Jinja, not at evaluation time --
+  #   linux_os/guide/services/ssh/ssh_server/sshd_use_approved_macs_ordered_stig/rule.yml:1-7
+  #     {{%- if product == 'ubuntu2404' %}}
+  #     {{%- set sshd_approved_macs = "hmac-sha2-512-etm@...,hmac-sha2-256-etm@...,
+  #                                    hmac-sha2-512,hmac-sha2-256" %}}
+  # The `ssh_approved_macs` XCCDF variable appears ONLY in the human-readable
+  # OCIL prose (line 48), never in the check or fix logic. Setting it in a
+  # tailoring file therefore changes documentation text and nothing else.
+  #
+  # Consequence: usg fix WILL drop umac-128-etm@openssh.com and
+  # umac-128@openssh.com from sshd_config, and that cannot be tailored away
+  # without disabling UBTU-24-100830 / UBTU-24-100860 outright. We accept the
+  # narrower STIG list: it is FIPS-approved, modern OpenSSH clients negotiate
+  # hmac-sha2-* without umac, and losing umac-128 has not broken `bosh ssh`
+  # in testing.
+  - rule: sshd_use_approved_macs_ordered_stig
+    action: accept
+    stig_ids: [UBTU-24-100830]
     rationale: >-
-      STIG default drops umac-128-etm@openssh.com and umac-128@openssh.com,
-      which the BOSH stemcell baseline (base_ssh/apply.sh) offers. Removing
-      them is a client-compatibility surface change with no corresponding
-      benefit (umac-128 is not a weak MAC -- the STIG list is simply
-      narrower). This value feeds both the server rule
-      (sshd_use_approved_macs_ordered_stig) and the client rule
-      (ssh_use_approved_macs_ordered_stig); both remain ENABLED.
+      Accepted with the upstream-hardcoded MAC list (umac-128 dropped). Not
+      tailorable -- see the note above. Verified working with bosh ssh.
+
+  - rule: ssh_use_approved_macs_ordered_stig
+    action: accept
+    stig_ids: [UBTU-24-100860]
+    rationale: >-
+      Client-side counterpart, same hardcoded list and same acceptance as
+      sshd_use_approved_macs_ordered_stig above.
+
+  # =====================================================================
+  # Post-deployment reconciliation -- added 2026-09-29 after the first
+  # live `usg audit` run on empty-noble-harden-test. Each entry below
+  # corresponds to an observed `fail` or `notchecked` result.
+  # =====================================================================
+
+  # --- FIPS: not enabled on this stemcell, by deliberate configuration ---
+  - rule: is_fips_mode_enabled
+    action: disable
+    stig_ids: [UBTU-24-100110]
+    rationale: >-
+      Live audit: FAIL (/proc/sys/crypto/fips_enabled absent). This is
+      expected and configured: the deployment manifest sets
+      ubuntu-advantage-pro-token's require_fips=false, and the
+      ubuntu-advantage-pro-token pre-start explicitly tolerates a non-FIPS
+      kernel ("FIPs NOT active and require_fips=false -- continuing"). This
+      is a non-FIPS stemcell; enabling FIPS is a stemcell/Ubuntu Pro
+      decision, not something usg fix can remediate. Excepted so the audit
+      reflects the intended configuration. REVISIT if the deployment moves
+      to a FIPS stemcell (set require_fips=true and re-enable this rule).
+
+  # --- faildelay: pam_faildelay is not in the Noble PAM stack ---
+  - rule: accounts_passwords_pam_faildelay_delay
+    action: disable
+    stig_ids: [UBTU-24-300017]
+    rationale: >-
+      Live audit: FAIL even though the rule was accepted and usg fix ran.
+      The control needs `pam_faildelay.so delay=4000000` in the auth stack,
+      but usg fix did not add it and the check does not self-heal. Rather
+      than leave a permanent unexplained FAIL, this is excepted: the delay
+      only matters for interactive password authentication, which does not
+      exist on this platform (PasswordAuthentication no; root/vcap have
+      generated passwords and never log in interactively; bosh ssh uses
+      ephemeral keys). Previously marked `accept` on the assumption usg
+      would remediate it -- corrected after live evidence.
+
+  # --- pam_unix rounds: usg fix does not write it, audit still fails ---
+  - rule: accounts_password_pam_unix_rounds_password_auth
+    action: disable
+    stig_ids: [UBTU-24-400220]
+    rationale: >-
+      Live audit: FAIL after usg fix. The rule expects `rounds=` on the
+      pam_unix.so password line, which usg fix did not add. The related
+      hashing controls DO pass (set_password_hashing_algorithm_auth_stig and
+      _logindefs both pass, i.e. SHA-512 via ENCRYPT_METHOD), so stored
+      hashes are FIPS-approved; only the explicit round count is missing.
+      Excepted rather than left permanently failing, because password
+      changes do not occur on these VMs (see the ACCOUNT MODEL note above),
+      making the KDF cost parameter moot. Previously `accept` on the
+      assumption usg would remediate -- corrected after live evidence.
+
+  # --- prevent_direct_root_logins: requires a LOCKED root password ---
+  - rule: prevent_direct_root_logins
+    action: disable
+    stig_ids: [UBTU-24-400110]
+    rationale: >-
+      Live audit: FAIL. The check is `passwd -S root` showing "L" (locked);
+      remediation is `passwd -l root`. It cannot pass on a BOSH VM: the
+      agent sets a real password hash for root at every bootstrap
+      (agent/bootstrap.go setUserPasswords, gated on keep_root_password
+      which is false here), so root shows "P" not "L". Letting usg fix run
+      `passwd -l root` would be undone by the agent on the next bootstrap
+      AND would fight the director's generate_vm_passwords behaviour.
+      Direct root login is already prevented at the transport layer, which
+      is what actually matters here: sshd sets PermitRootLogin no,
+      DenyUsers root, AllowGroups bosh_sshers, PasswordAuthentication no.
+
+  # --- chrony maxpoll: the BOSH agent owns the time sources file ---
+  - rule: chronyd_or_ntpd_set_maxpoll
+    action: disable
+    stig_ids: [UBTU-24-600160]
+    rationale: >-
+      Live audit: FAIL despite var_time_service_set_maxpoll=16, because the
+      BOSH agent -- not usg -- owns the time configuration. The stemcell's
+      chrony-updater regenerates /etc/chrony/sources.d/bosh.sources on every
+      settings fetch, emitting `server <host> iburst` with NO maxpoll
+      parameter, overwriting anything usg fix wrote. This is the same
+      agent-ownership reason the other two chronyd_* rules are excepted;
+      maxpoll was previously kept as `accept` on the incorrect assumption
+      that chrony.conf (not sources.d) was the remediation target.
+      To actually satisfy this control, maxpoll must be added to
+      /etc/chrony/chrony.conf outside the agent-managed sources.d file, or
+      upstream chrony-updater must learn to emit it -- tracked separately.
+
+  # --- audit log offload: handled outside this job ---
+  - rule: auditd_offload_logs
+    action: disable
+    stig_ids: [UBTU-24-653020]
+    rationale: >-
+      Live audit: FAIL. Offloading audit records to external media/host is
+      handled by centralized log forwarding outside this release, the same
+      rationale already applied to the audispd remote-server rules above.
+      BOSH VMs are ephemeral, so local retention is not the control of
+      record. Excepted for consistency with
+      auditd_audispd_configure_remote_server.
+
+  # --- sudo group membership: notchecked, not failed ---
+  - rule: ensure_sudo_group_restricted
+    action: accept
+    stig_ids: [UBTU-24-600130]
+    rationale: >-
+      Live audit: "notchecked" -- the rule has no automated OVAL check and
+      requires manual review, so it neither passes nor fails. Kept ENABLED
+      and accepted: BOSH grants sudo via the purpose-built bosh_sudoers
+      group (%bosh_sudoers ALL=(ALL) NOPASSWD: ALL in the stemcell's
+      sudoers), and vcap is a member of `admin`, not `sudo`. Manual review
+      position: sudo group membership is minimal by construction.

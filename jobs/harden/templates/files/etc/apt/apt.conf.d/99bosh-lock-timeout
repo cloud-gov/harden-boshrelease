@@ -1,0 +1,17 @@
+// Wait for the dpkg/apt lock instead of failing immediately.
+//
+// This is defensive, not a fix for an observed failure: the post-deploy
+// failure that prompted it turned out to be /run/lock/usg.lock contention
+// between parallel BOSH post-deploy scripts, not dpkg contention (see the
+// LOCK CONTENTION note in jobs/harden/templates/bin/post-deploy).
+//
+// It is still worth having. This job's post-deploy runs several apt
+// operations and then `usg fix`, whose package_* rule remediations invoke apt
+// internally. Concurrent apt activity -- apt-daily.service /
+// apt-daily-upgrade.service, unattended-upgrades, or Ubuntu Pro client work
+// from the sibling ubuntu-advantage-pro-token job's pre-start -- holds
+// /var/lib/dpkg/lock-frontend and makes apt exit non-zero straight away.
+// Waiting is the correct behaviour for an unattended deploy, and this config
+// is the only way to influence the apt calls made inside `usg fix`, which we
+// cannot pass flags to.
+DPkg::Lock::Timeout "600";

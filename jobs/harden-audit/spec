@@ -1,0 +1,30 @@
+---
+name: harden-audit
+
+# Errand job: a job is an errand purely by virtue of shipping bin/run.
+# Nothing runs it automatically -- it executes only on
+#     bosh -d <deployment> run-errand harden-audit
+#
+# This exists as a SEPARATE job from `harden` (rather than a bin/run added to
+# harden) because BOSH treats any job with bin/run as an errand, and an errand
+# job colocated in an instance group must be explicitly listed in the manifest.
+# Keeping it separate means adding or removing the on-demand audit capability is
+# a manifest change, not a change to the hardening job itself.
+#
+# Requires the `harden` job to be colocated in the same instance group: the
+# errand audits against that job's rendered files/tailor.xml, so the audit and
+# the remediation can never drift apart.
+
+templates:
+  run.sh: bin/run
+
+packages: []
+
+properties:
+  harden_audit.lock_wait_seconds:
+    description: |
+      How long to wait for another usg instance to release /run/lock/usg.lock
+      before giving up. usg serialises itself on this lock and exits non-zero
+      immediately rather than waiting, so a concurrent `usg fix` (e.g. a deploy
+      in flight) would otherwise fail this errand.
+    default: 900

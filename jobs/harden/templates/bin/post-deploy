@@ -37,6 +37,48 @@ cp "${JOB_DIR}/files/etc/apt/apt.conf.d/20auto-upgrades" /etc/apt/apt.conf.d/20a
 chmod 0644 /etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/20auto-upgrades
 chown root:root /etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/20auto-upgrades
 
+###
+# Make every apt invocation on this box WAIT for the dpkg lock rather than
+# exit non-zero. This must land before the first apt-get below, and it is the
+# only way to influence the apt calls that happen INSIDE `usg fix` (its
+# package_* rule remediations shell out to apt themselves).
+#
+# See the file's own comment for the full rationale: without it, the first
+# deploy of a release fails here and an identical second deploy succeeds.
+###
+
+cp "${JOB_DIR}/files/etc/apt/apt.conf.d/99bosh-lock-timeout" /etc/apt/apt.conf.d/99bosh-lock-timeout
+chmod 0644 /etc/apt/apt.conf.d/99bosh-lock-timeout
+chown root:root /etc/apt/apt.conf.d/99bosh-lock-timeout
+
+###
+# Belt-and-braces: explicitly wait out any apt work already in flight before
+# we start our own. DPkg::Lock::Timeout above handles the common case, but a
+# long-running apt-daily download can exceed it, and failing here with a clear
+# message beats failing later inside usg fix with an opaque one.
+###
+
+wait_for_apt_lock() {
+  local timeout=900 elapsed=0
+  while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
+     || fuser /var/lib/apt/lists/lock  >/dev/null 2>&1; do
+    if (( elapsed >= timeout )); then
+      echo "ERROR: dpkg/apt lock still held after ${timeout}s; aborting." >&2
+      echo "Holder(s):" >&2
+      fuser -v /var/lib/dpkg/lock-frontend >&2 2>&1 || true
+      return 1
+    fi
+    if (( elapsed % 30 == 0 )); then
+      echo "---> Waiting for another apt/dpkg process to finish (${elapsed}s elapsed)"
+    fi
+    sleep 5
+    elapsed=$(( elapsed + 5 ))
+  done
+  return 0
+}
+
+wait_for_apt_lock
+
 apt-get update
 
 ###
@@ -62,25 +104,112 @@ apt-get "${APT_CONFFILE_OPTS[@]}" install -y cracklib-runtime
 update-cracklib || true
 
 ###
-# Continuous security-only patching: install unattended-upgrades and enable
-# its timers. Config dropped in above scopes it to the -security pocket only.
+# Continuous security-only patching: install unattended-upgrades. The config
+# dropped in above scopes it to the -security pocket only.
+#
+# NOTE: the timers are deliberately NOT started here (no `--now`). Both
+# apt-daily.timer and apt-daily-upgrade.timer ship with Persistent=true, so
+# `systemctl enable --now` on a VM where they have never run makes systemd fire
+# a catch-up run IMMEDIATELY, taking the dpkg lock mid-deploy. That was not the
+# cause of the observed post-deploy failure (see the LOCK CONTENTION note
+# below -- that was /run/lock/usg.lock, not dpkg), but starting daily
+# maintenance timers during a deploy is a latent hazard regardless, so they are
+# enabled (firing on their OnCalendar schedule) rather than started, and the
+# enable happens after all of our own apt work.
 ###
 
 apt-get "${APT_CONFFILE_OPTS[@]}" install -y unattended-upgrades
-systemctl enable --now apt-daily.timer apt-daily-upgrade.timer
 
 ###
 # STIG remediation via Ubuntu Security Guide.
 #
 # No profile argument is given: usg rejects a positional profile when
-# --tailoring-file is supplied. The tailoring file itself declares the
-# benchmark channel (ubuntu2404_STIG_1) and the customized profile.
+# --tailoring-file is supplied ("You cannot provide both a tailoring file and
+# a profile!"). The tailoring file itself declares the benchmark channel
+# (ubuntu2404_STIG_1) and the customized profile.
 #
 # The tailoring file is generated from tools/tailor-convert/ -- see
 # tools/tailor-convert/README.md. Do not hand-edit it.
+#
+# LOCK CONTENTION -- root cause of "first deploy fails, second succeeds":
+#
+# BOSH runs the post-deploy script of EVERY job on the instance in PARALLEL
+# (bosh-agent ConcreteJobScriptProvider.NewParallelScript -- hence the director
+# error "1 of 2 post-deploy scripts failed"). usg serialises itself with a
+# single global flock on /run/lock/usg.lock and does NOT wait for it: it exits
+# non-zero immediately with
+#     Failed to acquire lock /run/lock/usg.lock. Is another instance of USG running?
+#
+# Historically this job's `usg fix` raced a `usg audit` in the
+# ubuntu-advantage-pro-token job's post-deploy, and whichever started second
+# died; on a redeploy the timing differed and it happened to succeed, which is
+# why it looked intermittent. That audit has since been REMOVED from the
+# sibling job and replaced by the on-demand `harden-audit` errand job, so
+# `usg fix` should now be the only usg invocation during a deploy.
+#
+# The wait-and-retry below is kept anyway: it is cheap, and it still protects
+# against the harden-audit errand (or `usg` by hand) running while a deploy is in
+# flight. We deliberately do NOT wrap usg in `flock` ourselves -- usg opens the
+# lock file itself, creating a separate open file description, so an outer
+# flock would conflict with usg's own acquisition rather than protect it.
 ###
+
+# Returns 0 as soon as no other process holds /run/lock/usg.lock.
+usg_lock_wait() {
+  local timeout="${1:-900}" elapsed=0 interval=5
+  while :; do
+    # Probe with a non-blocking exclusive flock on our own fd. If we get it,
+    # nothing else holds the lock; we release it immediately by closing the fd.
+    if ( exec 9>>/run/lock/usg.lock && flock --nonblock --exclusive 9 ) 2>/dev/null; then
+      return 0
+    fi
+    if (( elapsed >= timeout )); then
+      echo "ERROR: /run/lock/usg.lock still held after ${timeout}s." >&2
+      if command -v fuser >/dev/null 2>&1; then
+        echo "Lock holder(s):" >&2
+        fuser -v /run/lock/usg.lock >&2 2>&1 || true
+      fi
+      return 1
+    fi
+    if (( elapsed % 30 == 0 )); then
+      echo "---> Waiting for another usg instance to release /run/lock/usg.lock (${elapsed}s elapsed)"
+    fi
+    sleep "${interval}"
+    elapsed=$(( elapsed + interval ))
+  done
+}
+
 echo "Job DIR is ${JOB_DIR}"
-usg fix --tailoring-file "${JOB_DIR}/files/tailor.xml"
+
+usg_fix_with_retry() {
+  local attempts=5 attempt=1
+  while (( attempt <= attempts )); do
+    usg_lock_wait 900 || return 1
+    if usg fix --tailoring-file "${JOB_DIR}/files/tailor.xml"; then
+      return 0
+    fi
+    # usg exits non-zero both for a lost lock race and for genuine remediation
+    # errors. Only the lock race is worth retrying, and it is self-limiting.
+    if (( attempt == attempts )); then
+      echo "ERROR: 'usg fix' failed after ${attempts} attempts." >&2
+      return 1
+    fi
+    echo "---> 'usg fix' failed (attempt ${attempt}/${attempts}); retrying in 15s" >&2
+    sleep 15
+    attempt=$(( attempt + 1 ))
+  done
+}
+
+usg_fix_with_retry
+
+###
+# Enable the daily patching timers now that all of our own apt work is done.
+# No `--now`: see the unattended-upgrades note above -- Persistent=true means
+# starting them here would trigger an immediate catch-up run. Enabling alone
+# is sufficient; they will fire on their OnCalendar schedule.
+###
+
+systemctl enable apt-daily.timer apt-daily-upgrade.timer
 
 ###
 # AIDE database refresh. AIDE itself is installed/managed by the separate

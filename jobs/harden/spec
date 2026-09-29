@@ -6,6 +6,7 @@ templates:
   files/etc/apt/sources.list.d/aws-ubuntu-mirrors.list: files/etc/apt/sources.list.d/aws-ubuntu-mirrors.list
   files/etc/apt/apt.conf.d/51unattended-upgrades-security: files/etc/apt/apt.conf.d/51unattended-upgrades-security
   files/etc/apt/apt.conf.d/20auto-upgrades: files/etc/apt/apt.conf.d/20auto-upgrades
+  files/etc/apt/apt.conf.d/99bosh-lock-timeout: files/etc/apt/apt.conf.d/99bosh-lock-timeout
   files/tailor.xml: files/tailor.xml
 packages: []
 properties: {}

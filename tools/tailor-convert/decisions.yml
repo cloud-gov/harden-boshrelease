@@ -317,11 +317,22 @@ decisions:
     action: disable
     stig_ids: [UBTU-24-400310]
     rationale: >-
-      STIG wants PASS_MAX_DAYS 60; this release uses 90. Password expiry is
-      meaningless on two locked service accounts that never authenticate by
-      password, and an expiring vcap password is a live hazard to BOSH
-      operations rather than a security gain. PASS_MIN_DAYS (1) is still
-      enforced -- see accounts_minimum_age_login_defs.
+      Updated 2026-10-06 (David's STIG test scan review): this control should
+      not be checked at all, not merely relaxed from 60 to 90 days. There is
+      no password to rotate -- see the ACCOUNT MODEL note above: root and
+      vcap carry locked/agent-generated password hashes and never
+      authenticate by password, and `bosh ssh` users are ephemeral,
+      passwordless, and deleted within minutes. A maximum-age control is only
+      meaningful where interactive password authentication exists; it does
+      not here. PASS_MIN_DAYS (1) is still enforced -- see
+      accounts_minimum_age_login_defs -- which is likewise a no-cost
+      composition setting rather than evidence that password rotation
+      occurs.
+
+      (Previously excepted only partially, by setting PASS_MAX_DAYS to this
+      release's existing 90-day value instead of disabling outright. That
+      framing implied password expiry was a meaningful control just set to a
+      looser number; it is not applicable at all.)
 
   - rule: account_disable_post_pw_expiration
     action: disable
@@ -564,6 +575,30 @@ decisions:
       by sshd_enable_warning_banner_net (UBTU-24-200640, Banner
       /etc/issue.net), which remains ENABLED -- the stemcell's own base_ssh
       stage already sets `Banner /etc/issue.net`.
+
+  # --- SSH DOD consent banner: not a public-facing server ---
+  #
+  # Updated 2026-10-06 (David's STIG test scan review): the rationale above
+  # for banner_etc_profiled_ssh_confirm (operational -- it would block
+  # `bosh ssh`) is being superseded for the underlying banner requirement
+  # itself. These VMs are not public-facing: access is restricted to
+  # platform engineers via `bosh ssh` (key-based, through the BOSH director),
+  # not a general-purpose login surface the DOD notice-and-consent banner is
+  # meant to cover. Disabling the SSH-logon banner rule and its companion
+  # /etc/issue.net rule, rather than merely accepting the operational
+  # workaround above.
+  - rule: sshd_enable_warning_banner_net
+    action: disable
+    stig_ids: [UBTU-24-200640]
+    rationale: >-
+      Not a public server; access is restricted to platform engineers via
+      `bosh ssh`. The DOD mandatory notice-and-consent banner is intended for
+      systems with a general human-login surface, which this is not.
+
+  - rule: banner_etc_issue_net
+    action: disable
+    stig_ids: [UBTU-24-200640]
+    rationale: "Companion rule to sshd_enable_warning_banner_net above -- same rationale."
 
   # --- audit rules immutability: already satisfied on disk ---
   - rule: audit_rules_immutable
@@ -909,3 +944,49 @@ decisions:
       this rule SHOULD apply and be enforced, and "notapplicable" is a correct,
       self-documenting audit result rather than a gap. Disabling it would hide
       a real finding if the boot mode ever changed.
+
+  # --- Single-user/maintenance mode boot auth: access control is external ---
+  - rule: grub2_uefi_password
+    action: disable
+    stig_ids: [UBTU-24-102000]
+    rationale: >-
+      Decided 2026-10-06 (David's STIG test scan review). These VMs are
+      Concourse-pipeline-provisioned EC2 instances; access to the instance
+      itself (and therefore to its console/single-user boot path) is already
+      gated by IAM/EC2 access control external to the OS, not by a user
+      sitting at a physical console entering single-user mode. A GRUB
+      bootloader password protects against a local physical attacker, which
+      is not this platform's threat model -- the IaaS access-control boundary
+      is what actually matters here. (See grub2_password above for the
+      BIOS/UEFI sibling-rule note; this disables the UEFI counterpart that
+      was previously enabled.)
+
+  # =====================================================================
+  # BLOCKED decisions -- rule does not exist in the current gold file
+  # =====================================================================
+  #
+  # UBTU-24-300020 ("must require users to provide a password for privilege
+  # escalation" -- the NOPASSWD-in-sudoers check) was flagged 2026-10-06
+  # (David's STIG test scan review) with the same rationale as
+  # sudo_require_authentication (UBTU-24-300021) above: BOSH SSH grants
+  # passwordless sudo by design via %bosh_sudoers, and security is enforced
+  # above the container (IAM/EC2 access control), not via sudo
+  # reauthentication.
+  #
+  # It cannot be added as a decision yet: UBTU-24-300020 does not appear
+  # anywhere in gold/ubuntu2404-stig-v1r6.xml (confirmed by grep), even
+  # though the live Nessus scan that surfaced it ran against the real DISA
+  # Canonical Ubuntu 24.04 STIG V1R6 benchmark. The gold file's own embedded
+  # <description> says "V1R1, released 2025-01-28" -- it is V1R1 content
+  # under a V1R6 filename, not actually regenerated against V1R6. The
+  # Nessus scan also surfaced 7 other UBTU-24-* IDs absent from this gold
+  # file (100050, 200041, 200042, 200043, 200270, 300019, 909890).
+  #
+  # TRIGGER TO UNBLOCK: regenerate gold/ubuntu2404-stig-v1r6.xml on a real
+  # Noble VM with usg installed (`sudo usg generate-tailoring disa_stig
+  # /tmp/gold-noble.xml`, per README.md "Regenerating the gold file"), then
+  # add a `disable` decision here for whichever rule name UBTU-24-300020
+  # maps to in the regenerated file (likely a `sudoers_*` or
+  # `sudo_remove_nopasswd`-style rule -- confirm by searching the new gold
+  # file's comment block for "UBTU-24-300020").
+

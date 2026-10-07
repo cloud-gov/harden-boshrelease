@@ -203,34 +203,38 @@ usg_fix_with_retry() {
 usg_fix_with_retry
 
 ###
-# Replace the legacy auditd package rules that use auid>=500.
-#
-# Ubuntu's auditd package installs /etc/audit/rules.d/audit.rules as a
-# conffile. USG adds the newer split rule files, but does not remove this
-# legacy fragment. Leaving both fragments causes augenrules to load duplicate
-# rules and makes the canonical Noble STIG scan fail.
+# Remove the auditd package fragment containing legacy auid>=500 rules.
+# USG generates the current rules in separate *.rules fragments.
 ###
 LEGACY_AUDIT_RULES=/etc/audit/rules.d/audit.rules
 
 if [[ -f "${LEGACY_AUDIT_RULES}" ]]; then
-  sed -i 's/auid>=500/auid>=1000/g' "${LEGACY_AUDIT_RULES}"
+  mv -f "${LEGACY_AUDIT_RULES}" \
+    "${LEGACY_AUDIT_RULES}.disabled"
 fi
 
-# Rebuild and load the combined audit rules after modifying the package
-# conffile. audit_rules_immutable remains intentionally disabled in the
-# tailoring file so this can run during deployment.
+install -o root -g root -m 0600 \
+  "${JOB_DIR}/files/etc/audit/rules.d/00-audit-control.rules" \
+  /etc/audit/rules.d/00-audit-control.rules
+
+install -o root -g root -m 0600 \
+  "${JOB_DIR}/files/etc/audit/rules.d/05-bosh-baseline.rules" \
+  /etc/audit/rules.d/05-bosh-baseline.rules
+
+# Rebuild from the active fragments after removing the legacy fragment.
+rm -f /etc/audit/audit.rules
 augenrules --load
 
-# Fail the deployment rather than silently leaving the legacy rules active.
-if grep -Rqs 'auid>=500' \
-  /etc/audit/rules.d \
-  /etc/audit/audit.rules; then
-  echo "ERROR: legacy audit rules using auid>=500 remain after remediation." >&2
-  grep -RIn 'auid>=500' \
-    /etc/audit/rules.d \
-    /etc/audit/audit.rules >&2
+# Fail closed if legacy rules remain in active input fragments.
+if find /etc/audit/rules.d -maxdepth 1 -type f -name '*.rules' \
+  -print0 | xargs -0 grep -qs 'auid>=500'; then
+  echo "ERROR: active audit rule fragments still contain auid>=500." >&2
+  find /etc/audit/rules.d -maxdepth 1 -type f -name '*.rules' \
+    -print0 | xargs -0 grep -nH 'auid>=500' >&2
   exit 1
 fi
+
+
 
 ###
 # Enable the daily patching timers now that all of our own apt work is done.

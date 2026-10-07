@@ -7,6 +7,8 @@ templates:
   files/etc/apt/apt.conf.d/51unattended-upgrades-security: files/etc/apt/apt.conf.d/51unattended-upgrades-security
   files/etc/apt/apt.conf.d/20auto-upgrades: files/etc/apt/apt.conf.d/20auto-upgrades
   files/etc/apt/apt.conf.d/99bosh-lock-timeout: files/etc/apt/apt.conf.d/99bosh-lock-timeout
+  files/etc/audit/rules.d/00-audit-control.rules: files/etc/audit/rules.d/00-audit-control.rules
+  files/etc/audit/rules.d/05-bosh-baseline.rules: files/etc/audit/rules.d/05-bosh-baseline.rules
   files/tailor.xml: files/tailor.xml
 packages: []
 properties: {}

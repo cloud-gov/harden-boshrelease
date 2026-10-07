@@ -203,6 +203,36 @@ usg_fix_with_retry() {
 usg_fix_with_retry
 
 ###
+# Replace the legacy auditd package rules that use auid>=500.
+#
+# Ubuntu's auditd package installs /etc/audit/rules.d/audit.rules as a
+# conffile. USG adds the newer split rule files, but does not remove this
+# legacy fragment. Leaving both fragments causes augenrules to load duplicate
+# rules and makes the canonical Noble STIG scan fail.
+###
+LEGACY_AUDIT_RULES=/etc/audit/rules.d/audit.rules
+
+if [[ -f "${LEGACY_AUDIT_RULES}" ]]; then
+  sed -i 's/auid>=500/auid>=1000/g' "${LEGACY_AUDIT_RULES}"
+fi
+
+# Rebuild and load the combined audit rules after modifying the package
+# conffile. audit_rules_immutable remains intentionally disabled in the
+# tailoring file so this can run during deployment.
+augenrules --load
+
+# Fail the deployment rather than silently leaving the legacy rules active.
+if grep -Rqs 'auid>=500' \
+  /etc/audit/rules.d \
+  /etc/audit/audit.rules; then
+  echo "ERROR: legacy audit rules using auid>=500 remain after remediation." >&2
+  grep -RIn 'auid>=500' \
+    /etc/audit/rules.d \
+    /etc/audit/audit.rules >&2
+  exit 1
+fi
+
+###
 # Enable the daily patching timers now that all of our own apt work is done.
 # No `--now`: see the unattended-upgrades note above -- Persistent=true means
 # starting them here would trigger an immediate catch-up run. Enabling alone

@@ -2,6 +2,8 @@
 -w /sbin/rmmod -p x -k modules
 -w /bin/kmod -p x -k modules
 
+-a always,exit -F path=/sbin/modprobe -F perm=x -F auid>=1000 -F auid!=unset -F key=privileged
+
 -w /etc/localtime -p wa -k time-change
 
 -w /etc/sudoers -p wa -k scope

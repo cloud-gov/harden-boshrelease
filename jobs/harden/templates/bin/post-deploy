@@ -223,7 +223,18 @@ install -o root -g root -m 0600 \
 
 # Rebuild from the active fragments after removing the legacy fragment.
 rm -f /etc/audit/audit.rules
-augenrules --load
+if ! augenrules --load; then
+  echo "ERROR: augenrules failed. Generated rules, with line numbers:" >&2
+  nl -ba /etc/audit/audit.rules >&2
+  echo "ERROR: duplicate active source rules, with fragment locations:" >&2
+  while IFS= read -r duplicate_rule; do
+    grep -nHF -- "${duplicate_rule}" /etc/audit/rules.d/*.rules >&2
+  done < <(
+    awk '!/^($|#)/ { count[$0]++ } END { for (rule in count) if (count[rule] > 1) print rule }' \
+      /etc/audit/rules.d/*.rules
+  )
+  exit 1
+fi
 
 # Fail closed if legacy rules remain in active input fragments.
 if find /etc/audit/rules.d -maxdepth 1 -type f -name '*.rules' \

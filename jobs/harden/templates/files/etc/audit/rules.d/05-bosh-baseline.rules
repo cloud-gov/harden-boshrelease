@@ -1,0 +1,46 @@
+-w /sbin/insmod -p x -k modules
+-w /sbin/rmmod -p x -k modules
+-w /sbin/modprobe -p x -k modules
+-w /bin/kmod -p x -k modules
+
+-w /usr/sbin/fdisk -p x -k modules
+
+-w /etc/localtime -p wa -k time-change
+
+-w /etc/sudoers -p wa -k scope
+
+# Login, session, and identity watches. DO NOT DELETE: `usg fix` does NOT
+# generate these -- there is no USG fragment for logins, session, or identity
+# (verified against the live fragment set in /etc/audit/rules.d). They came
+# from the auditd package conffile, which post-deploy renames to
+# audit.rules.disabled, so this file is now their only source. Deleting them
+# silently fails 10 STIG controls while `usg audit` still reports 0 fail:
+# UBTU-24-200280/200290/200300/200310/200320 (identity),
+# UBTU-24-900590/900600/900610 (session), UBTU-24-900250/900260 (logins).
+# Confirmed PASSED by Tenable scan of 2026-10-08 22:12 UTC.
+-w /var/log/faillog -p wa -k logins
+-w /var/log/lastlog -p wa -k logins
+-w /var/log/tallylog -p wa -k logins
+-w /var/run/faillock -p wa -k logins
+
+-w /var/run/utmp -p wa -k session
+-w /var/log/wtmp -p wa -k session
+-w /var/log/btmp -p wa -k session
+
+-w /etc/group -p wa -k identity
+-w /etc/passwd -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/security/opasswd -p wa -k identity
+
+-w /etc/cron.d -p wa -k cron
+-w /var/spool/cron -p wa -k cron
+
+-w /etc/issue -p wa -k system-locale
+-w /etc/issue.net -p wa -k system-locale
+-w /etc/hosts -p wa -k system-locale
+-w /etc/network -p wa -k system-locale
+-w /etc/networks -p wa -k system-locale
+
+-w /etc/apparmor/ -p wa -k MAC-policy
+-w /etc/apparmor.d/ -p wa -k MAC-policy

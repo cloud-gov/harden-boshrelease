@@ -3,9 +3,7 @@ set -e
 
 echo "---> Starting hardening process"
 
-# cheap hack - nessus for some reason assumes it knows the absolute path
-# check first to make sure grep doesn't exist
-[[ -e /usr/bin/grep ]] || ln -s /bin/grep /usr/bin/grep
+JOB_DIR=/var/vcap/jobs/harden
 
 # Make all apt/dpkg calls in this script non-interactive and force local
 # conffile changes (e.g. our /etc/issue banner) to win over package defaults
@@ -16,361 +14,255 @@ echo "---> Starting hardening process"
 export DEBIAN_FRONTEND=noninteractive
 APT_CONFFILE_OPTS=(-o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confdef")
 
-cd /var/vcap/jobs/harden/files
-
 ###
-# AWS Ubuntu Mirrors
-#
+# APT sources: the allow-listed mirrors. Required before any apt-get below --
+# ADR-0002 specifies cracklib-runtime must come from an allow-listed mirror
+# (us-gov-west-1 archive), not an arbitrary source (CM-7, supply chain).
 ###
 
-cp etc/apt/sources.list.d/aws-ubuntu-mirrors.list /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
+cp "${JOB_DIR}/files/etc/apt/sources.list.d/aws-ubuntu-mirrors.list" /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
 chmod 0644 /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
 chown root:root /etc/apt/sources.list.d/aws-ubuntu-mirrors.list
 
 ###
-# Continuous security-only patching (persists remediation of future USN/CVE
-# advisories without a new fisma-noble release per CVE).
+# Continuous security-only patching config. Must land BEFORE installing
+# unattended-upgrades below -- installing the package without this config
+# would enable automatic upgrades under distro defaults rather than the
+# -security-pocket-only scope this baseline is validated against.
 ###
 
 mkdir -p /etc/apt/apt.conf.d
-cp etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/51unattended-upgrades-security
-cp etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades
+cp "${JOB_DIR}/files/etc/apt/apt.conf.d/51unattended-upgrades-security" /etc/apt/apt.conf.d/51unattended-upgrades-security
+cp "${JOB_DIR}/files/etc/apt/apt.conf.d/20auto-upgrades" /etc/apt/apt.conf.d/20auto-upgrades
 chmod 0644 /etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/20auto-upgrades
 chown root:root /etc/apt/apt.conf.d/51unattended-upgrades-security /etc/apt/apt.conf.d/20auto-upgrades
 
 ###
-# /etc/modprobe.d Safe Defaults
-# See https://github.com/18F/ubuntu/blob/master/hardening.md
+# Make every apt invocation on this box WAIT for the dpkg lock rather than
+# exit non-zero. This must land before the first apt-get below, and it is the
+# only way to influence the apt calls that happen INSIDE `usg fix` (its
+# package_* rule remediations shell out to apt themselves).
+#
+# See the file's own comment for the full rationale: without it, the first
+# deploy of a release fails here and an identical second deploy succeeds.
 ###
 
-cp etc/modprobe.d/18Fhardened.conf /etc/modprobe.d/18Fhardened.conf
-chmod 0644 /etc/modprobe.d/18Fhardened.conf
-chown root:root /etc/modprobe.d/18Fhardened.conf
+cp "${JOB_DIR}/files/etc/apt/apt.conf.d/99bosh-lock-timeout" /etc/apt/apt.conf.d/99bosh-lock-timeout
+chmod 0644 /etc/apt/apt.conf.d/99bosh-lock-timeout
+chown root:root /etc/apt/apt.conf.d/99bosh-lock-timeout
 
 ###
-# grub changes (workaround while we work with Nessus to fix scans)
+# Belt-and-braces: explicitly wait out any apt work already in flight before
+# we start our own. DPkg::Lock::Timeout above handles the common case, but a
+# long-running apt-daily download can exceed it, and failing here with a clear
+# message beats failing later inside usg fix with an opaque one.
 ###
 
-cp etc/default/grub /etc/default/grub
-chmod 0600 /etc/default/grub
+wait_for_apt_lock() {
+  local timeout=900 elapsed=0
+  while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
+     || fuser /var/lib/apt/lists/lock  >/dev/null 2>&1; do
+    if (( elapsed >= timeout )); then
+      echo "ERROR: dpkg/apt lock still held after ${timeout}s; aborting." >&2
+      echo "Holder(s):" >&2
+      fuser -v /var/lib/dpkg/lock-frontend >&2 2>&1 || true
+      return 1
+    fi
+    if (( elapsed % 30 == 0 )); then
+      echo "---> Waiting for another apt/dpkg process to finish (${elapsed}s elapsed)"
+    fi
+    sleep 5
+    elapsed=$(( elapsed + 5 ))
+  done
+  return 0
+}
 
-###
-# Redirect protections
-# See https://github.com/18F/ubuntu/blob/master/hardening.md#redirect-protections
-###
-
-cp etc/sysctl.conf /etc/sysctl.conf
-chmod 0644 /etc/sysctl.conf
-chown root:root /etc/sysctl.conf
-
-IPV4_SETTINGS[0]="net.ipv4.conf.default.rp_filter=1"
-IPV4_SETTINGS[1]="net.ipv4.conf.all.rp_filter=1"
-IPV4_SETTINGS[2]="net.ipv4.conf.all.accept_redirects=0"
-IPV4_SETTINGS[3]="net.ipv4.conf.default.accept_redirects=0"
-IPV4_SETTINGS[4]="net.ipv4.conf.all.secure_redirects=0"
-IPV4_SETTINGS[5]="net.ipv4.conf.default.secure_redirects=0"
-IPV4_SETTINGS[6]="net.ipv4.conf.all.send_redirects=0"
-IPV4_SETTINGS[7]="net.ipv4.conf.default.send_redirects=0"
-IPV4_SETTINGS[8]="net.ipv4.conf.all.accept_source_route=0"
-IPV4_SETTINGS[9]="net.ipv4.conf.default.accept_source_route=0"
-IPV4_SETTINGS[10]="net.ipv4.conf.all.log_martians=1"
-IPV4_SETTINGS[11]="net.ipv4.conf.default.log_martians=1"
-IPV4_SETTINGS[12]="net.ipv4.icmp_echo_ignore_broadcasts=1"
-IPV4_SETTINGS[13]="net.ipv4.icmp_ignore_bogus_error_responses=1"
-IPV4_SETTINGS[14]="net.ipv4.tcp_syncookies=1"
-IPV4_SETTINGS[15]="net.ipv4.route.flush=1"
-
-IPV6_SETTINGS[0]="net.ipv6.conf.all.accept_redirects=0"
-IPV6_SETTINGS[1]="net.ipv6.conf.all.accept_source_route=0"
-IPV6_SETTINGS[2]="net.ipv6.conf.default.accept_source_route=0"
-IPV6_SETTINGS[3]="net.ipv6.conf.all.accept_ra=0"
-IPV6_SETTINGS[4]="net.ipv6.conf.default.accept_ra=0"
-IPV6_SETTINGS[5]="net.ipv6.conf.all.accept_redirects=0"
-IPV6_SETTINGS[6]="net.ipv6.conf.default.accept_redirects=0"
-IPV6_SETTINGS[6]="net.ipv6.route.flush=1"
-
-
-if [ ! -f /etc/sysctl.conf.orig ]; then
-    cp /etc/sysctl.conf /etc/sysctl.conf.orig
-    # ensure there's a \n at the end of the file
-    echo "" >> /etc/sysctl.conf.orig
-fi
-
-cp /etc/sysctl.conf.orig /etc/sysctl.conf
-
-for setting in "${IPV4_SETTINGS[@]}"; do
-  /sbin/sysctl -w $setting
-  echo "${setting}" >> /etc/sysctl.conf
-done
-
-# only harden ipv6 settings, if ipv6 is enabled
-if [ -d /proc/sys/net/ipv6 ]; then
-    for setting in "${IPV6_SETTINGS[@]}"; do
-        /sbin/sysctl -w $setting
-        echo "${setting}" >> /etc/sysctl.conf
-    done
-fi
-
-# reload all sysctl settings
-# error handling is disabled, ipv6 settings will auto apply if enabled
-set +e
-/sbin/sysctl -p /etc/sysctl.conf
-set -e
-
-
-###
-# Audit Strategy!
-# See https://github.com/18F/ubuntu/blob/master/hardening.md#audit-strategy
-###
-
-mkdir -p /etc/audit
-cp etc/audit/audit.rules /etc/audit/audit.rules
-chmod -R 0640 /etc/audit
-chown -R root:root /etc/audit
-
-
-###
-# System Access, Authentication and Authorization
-# See https://github.com/18F/ubuntu/blob/master/hardening.md#system-access-authentication-and-authorization
-###
-
-rm -f /etc/at.deny
-
-CRON_FILES[0]="/etc/cron.allow"
-CRON_FILES[1]="/etc/at.allow"
-CRON_FILES[2]="/etc/crontab"
-CRON_FILES[3]="/etc/cron.hourly"
-CRON_FILES[4]="/etc/cron.daily"
-CRON_FILES[5]="/etc/cron.weekly"
-CRON_FILES[6]="/etc/cron.monthly"
-CRON_FILES[7]="/etc/cron.d"
-
-for file in "${CRON_FILES[@]}"; do
-  chmod 0600 $file
-  chown root:root $file
-done
-
-
-###
-# Password Policy
-# See https://github.com/18F/ubuntu/blob/master/hardening.md#password-policy
-###
+wait_for_apt_lock
 
 apt-get update
-apt-get "${APT_CONFFILE_OPTS[@]}" install --only-upgrade -y libpam-pwquality
 
 ###
-# One-time upgrade for currently-known CVEs (2026-09-17 Nessus scan:
-# USN-8744-1 python, USN-8721-1 openssh, USN-8720-1 gnupg). Persistent
-# remediation for FUTURE advisories is unattended-upgrades (below); this
-# block only closes what was already open at the time of this change.
-###
-apt-get "${APT_CONFFILE_OPTS[@]}" install --only-upgrade -y \
-  openssh-client openssh-server openssh-sftp-server \
-  gpg gpg-agent gpgconf gpgv \
-  python3.12 python3.12-minimal libpython3.12-minimal libpython3.12-stdlib libpython3.12t64
-
-cp etc/pam.d/common-password /etc/pam.d/common-password
-cp etc/pam.d/common-auth /etc/pam.d/common-auth
-cp etc/pam.d/login /etc/pam.d/login
-cp etc/pam.d/su /etc/pam.d/su
-cp etc/login.defs /etc/login.defs
-cp etc/security/pwquality.conf /etc/security/pwquality.conf
-cp etc/security/faillock.conf /etc/security/faillock.conf
-
-chown root:root /etc/pam.d/common-password /etc/pam.d/common-auth /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf /etc/security/faillock.conf
-chmod 0644 /etc/pam.d/common-password /etc/pam.d/common-auth /etc/pam.d/login /etc/login.defs /etc/security/pwquality.conf /etc/security/faillock.conf
-
-###
-# SSH Settings
-# See https://github.com/18F/ubuntu/blob/master/hardening.md#ssh-settings
+# cracklib dictionary -- REQUIRED for pam_pwquality dictcheck.
+#
+# See ADR-0002 (0002-cracklib-runtime-required-harden-dependency-noble.md):
+# the Noble stemcell ships no cracklib, but pam_pwquality's dictcheck loads
+# /var/cache/cracklib/cracklib_dict.pwd. Without it the requisite pwquality
+# module fails and EVERY password change on the box fails with
+# "Authentication token manipulation error" -- promotion-blocking.
+#
+# This is NOT the removed libpam-cracklib PAM module (correctly gone in PAM
+# 1.5.0; this release uses the modern pam_pwquality). It is the separate
+# cracklib-runtime package that BUILDS the dictionary dictcheck needs.
+#
+# Must run BEFORE `usg fix` below, because the STIG tailoring leaves
+# accounts_password_pam_dictcheck enabled -- usg fix will write dictcheck=1
+# into pwquality.conf, so the dictionary has to already exist.
+# ADR-0002 explicitly REJECTED dictcheck=0 as a workaround.
 ###
 
-cp etc/ssh/sshd_config /etc/ssh/sshd_config
-chmod 0600 /etc/ssh/sshd_config
+apt-get "${APT_CONFFILE_OPTS[@]}" install -y cracklib-runtime
+update-cracklib || true
 
 ###
-# Set warning banner for login services
+# Continuous security-only patching: install unattended-upgrades. The config
+# dropped in above scopes it to the -security pocket only.
+#
+# NOTE: the timers are deliberately NOT started here (no `--now`). Both
+# apt-daily.timer and apt-daily-upgrade.timer ship with Persistent=true, so
+# `systemctl enable --now` on a VM where they have never run makes systemd fire
+# a catch-up run IMMEDIATELY, taking the dpkg lock mid-deploy. That was not the
+# cause of the observed post-deploy failure (see the LOCK CONTENTION note
+# below -- that was /run/lock/usg.lock, not dpkg), but starting daily
+# maintenance timers during a deploy is a latent hazard regardless, so they are
+# enabled (firing on their OnCalendar schedule) rather than started, and the
+# enable happens after all of our own apt work.
 ###
 
-cp etc/issue /etc/issue
-cp etc/issue /etc/issue.net
-cp etc/update-motd.d/00-header /etc/update-motd.d/00-header
-touch /etc/motd
-
-ISSUE_FILES[0]="/etc/issue"
-ISSUE_FILES[1]="/etc/issue.net"
-ISSUE_FILES[2]="/etc/motd"
-ISSUE_FILES[3]="/etc/update-motd.d/00-header"
-
-for file in "${ISSUE_FILES[@]}"; do
-  chmod 0644 $file
-  chown root:root $file
-done
+apt-get "${APT_CONFFILE_OPTS[@]}" install -y unattended-upgrades
 
 ###
-# Restrict Core Dumps
+# STIG remediation via Ubuntu Security Guide.
+#
+# No profile argument is given: usg rejects a positional profile when
+# --tailoring-file is supplied ("You cannot provide both a tailoring file and
+# a profile!"). The tailoring file itself declares the benchmark channel
+# (ubuntu2404_STIG_1) and the customized profile.
+#
+# The tailoring file is generated from tools/tailor-convert/ -- see
+# tools/tailor-convert/README.md. Do not hand-edit it.
+#
+# LOCK CONTENTION -- root cause of "first deploy fails, second succeeds":
+#
+# BOSH runs the post-deploy script of EVERY job on the instance in PARALLEL
+# (bosh-agent ConcreteJobScriptProvider.NewParallelScript -- hence the director
+# error "1 of 2 post-deploy scripts failed"). usg serialises itself with a
+# single global flock on /run/lock/usg.lock and does NOT wait for it: it exits
+# non-zero immediately with
+#     Failed to acquire lock /run/lock/usg.lock. Is another instance of USG running?
+#
+# Historically this job's `usg fix` raced a `usg audit` in the
+# ubuntu-advantage-pro-token job's post-deploy, and whichever started second
+# died; on a redeploy the timing differed and it happened to succeed, which is
+# why it looked intermittent. That audit has since been REMOVED from the
+# sibling job and replaced by the on-demand `harden-audit` errand job, so
+# `usg fix` should now be the only usg invocation during a deploy.
+#
+# The wait-and-retry below is kept anyway: it is cheap, and it still protects
+# against the harden-audit errand (or `usg` by hand) running while a deploy is in
+# flight. We deliberately do NOT wrap usg in `flock` ourselves -- usg opens the
+# lock file itself, creating a separate open file description, so an outer
+# flock would conflict with usg's own acquisition rather than protect it.
 ###
 
-cp etc/security/limits.conf /etc/security/limits.conf
+# Returns 0 as soon as no other process holds /run/lock/usg.lock.
+usg_lock_wait() {
+  local timeout="${1:-900}" elapsed=0 interval=5
+  while :; do
+    # Probe with a non-blocking exclusive flock on our own fd. If we get it,
+    # nothing else holds the lock; we release it immediately by closing the fd.
+    if ( exec 9>>/run/lock/usg.lock && flock --nonblock --exclusive 9 ) 2>/dev/null; then
+      return 0
+    fi
+    if (( elapsed >= timeout )); then
+      echo "ERROR: /run/lock/usg.lock still held after ${timeout}s." >&2
+      if command -v fuser >/dev/null 2>&1; then
+        echo "Lock holder(s):" >&2
+        fuser -v /run/lock/usg.lock >&2 2>&1 || true
+      fi
+      return 1
+    fi
+    if (( elapsed % 30 == 0 )); then
+      echo "---> Waiting for another usg instance to release /run/lock/usg.lock (${elapsed}s elapsed)"
+    fi
+    sleep "${interval}"
+    elapsed=$(( elapsed + interval ))
+  done
+}
+
+echo "Job DIR is ${JOB_DIR}"
+
+usg_fix_with_retry() {
+  local attempts=5 attempt=1
+  while (( attempt <= attempts )); do
+    usg_lock_wait 900 || return 1
+    if usg fix --tailoring-file "${JOB_DIR}/files/tailor.xml"; then
+      return 0
+    fi
+    # usg exits non-zero both for a lost lock race and for genuine remediation
+    # errors. Only the lock race is worth retrying, and it is self-limiting.
+    if (( attempt == attempts )); then
+      echo "ERROR: 'usg fix' failed after ${attempts} attempts." >&2
+      return 1
+    fi
+    echo "---> 'usg fix' failed (attempt ${attempt}/${attempts}); retrying in 15s" >&2
+    sleep 15
+    attempt=$(( attempt + 1 ))
+  done
+}
+
+usg_fix_with_retry
 
 ###
-# Change permissions on home directory
+# Remove the auditd package fragment containing legacy auid>=500 rules.
+# USG generates the current rules in separate *.rules fragments.
 ###
+LEGACY_AUDIT_RULES=/etc/audit/rules.d/audit.rules
 
-chmod 0750 /home/vcap
-chmod 0750 /var/mail
-
-
-###
-# Ensure syslog emits at least one entry each minute
-###
-sed -i 's/^#\($ModLoad immark\)/\1/' /etc/rsyslog.conf
-sed -i 's/^\($ModLoad imuxsock\)/#\1/' /etc/rsyslog.conf
-sed -i 's/^\($SystemLogSocketName\)/#\1/' /etc/rsyslog.conf
-sed -i 's/^\($RepeatedMsgReduction on\)/#\1/' /etc/rsyslog.conf
-
-cat << 'EOF' > /etc/rsyslog.d/00-heartbeat.conf
-$MarkMessagePeriod 60
-$ActionWriteAllMarkmessages on
-
-module(load="imuxsock" SysSock.IgnoreOwnMessages="off" SysSock.RateLimit.Interval="0" SysSock.Name="/run/systemd/journal/syslog")
-EOF
-
-service rsyslog restart
-
-###
-# Ensure rpcbind does not run at start (Nessus check 6.7)
-###
-# rpcbind (portmapper) hardening.
-# On the Noble stemcell rpcbind is not installed, so there is nothing to disable.
-# Guard the step so it is a safe no-op if the package is absent, and handle the
-# socket-activated case if it ever IS present (systemd; the old Upstart
-# /etc/init/rpcbind-boot.conf path is obsolete and removed).
-if dpkg -l | grep -qw rpcbind; then
-  systemctl stop    rpcbind.socket rpcbind.service 2>/dev/null || true
-  systemctl disable rpcbind.socket rpcbind.service 2>/dev/null || true
-  systemctl mask    rpcbind.socket rpcbind.service 2>/dev/null || true
+if [[ -f "${LEGACY_AUDIT_RULES}" ]]; then
+  mv -f "${LEGACY_AUDIT_RULES}" \
+    "${LEGACY_AUDIT_RULES}.disabled"
 fi
 
-###
-# remove rsync
-###
+install -o root -g root -m 0600 \
+  "${JOB_DIR}/files/etc/audit/rules.d/00-audit-control.rules" \
+  /etc/audit/rules.d/00-audit-control.rules
 
-sudo apt-get -y remove rsync
-sudo apt-get -y purge rsync
+install -o root -g root -m 0600 \
+  "${JOB_DIR}/files/etc/audit/rules.d/05-bosh-baseline.rules" \
+  /etc/audit/rules.d/05-bosh-baseline.rules
 
-###
-# remove chrony
-###
-
-# sudo apt -y purge chrony  # Needed for bosh-agent to configure ntp, chronyc is hardcoded into the agent
-
-###
-# Limit logfile access
-###
-chmod -R 0600 /var/log/*
-
-###
-# drop in profile files to pick up umask
-###
-cp etc/bash.bashrc /etc/bash.bashrc
-cp etc/profile /etc/profile
-
-chown root: /etc/bash.bashrc /etc/profile
-chmod 0644 /etc/bash.bashrc /etc/profile
-
-###
-# shadow
-###
-chown root:shadow /etc/shadow /etc/gshadow
-
-###
-# disable inactive users after 30 days
-###
-useradd -D -f 30
-
-####
-# enforce password settings
-###
-
-chage --mindays 1 root
-chage --maxdays 90 root
-chage --maxdays 90 vcap
-chage --inactive 30 root
-chage --inactive 30 vcap
-
-###
-# set secure consoles
-###
-
-cp etc/securetty /etc/securetty
-chown root: /etc/securetty
-chmod 0644 /etc/securetty
-
-###
-# clean up after systemd-timesyncd
-###
-
-# systemd-timesyncd hardening: chrony is the time source, not timesyncd.
-# On the Noble stemcell timesyncd is already removed (dpkg state 'rc'); purge the
-# residual config so nothing is left for audit/Nessus to flag. Guarded so it's a
-# safe no-op if the package is fully absent.
-if dpkg -l | grep -E '^rc|^ii' | grep -qw systemd-timesyncd; then
-  apt-get -y purge systemd-timesyncd 2>/dev/null || true
+# Rebuild from the active fragments after removing the legacy fragment.
+rm -f /etc/audit/audit.rules
+if ! augenrules --load; then
+  echo "ERROR: augenrules failed. Generated rules, with line numbers:" >&2
+  nl -ba /etc/audit/audit.rules >&2
+  echo "ERROR: duplicate active source rules, with fragment locations:" >&2
+  while IFS= read -r duplicate_rule; do
+    grep -nHF -- "${duplicate_rule}" /etc/audit/rules.d/*.rules >&2
+  done < <(
+    awk '!/^($|#)/ { count[$0]++ } END { for (rule in count) if (count[rule] > 1) print rule }' \
+      /etc/audit/rules.d/*.rules
+  )
+  exit 1
 fi
-# clean residual runtime state if present (idempotent)
-rm -f /var/lib/private/systemd/timesync/clock 2>/dev/null || true
-rmdir /var/lib/private/systemd/timesync 2>/dev/null || true
 
-###
-# install tcpwrappers
-###
-apt-get "${APT_CONFFILE_OPTS[@]}" install --only-upgrade -y tcpd
-
-###
-# Ensure bootloader permissions are not overridden
-###
-# sed -ri 's/chmods+[0-7][0-7][0-7]s+${grub_cfg}.new/chmod 400 ${grub_cfg}.new/' /usr/sbin/grub-mkconfig
-# sed -ri 's/ && ! grep '^password' ${grub_cfg}.new >/dev/null//' /usr/sbin/grub-mkconfig
-
-###
-# Set grub permissions
-###
-chown root:root /boot/grub/grub.cfg
-chmod u-wx,go-rwx /boot/grub/grub.cfg
-
-###
-# Stop and mask timesyncd
-###
-#systemctl stop systemd-timesyncd.service
-#systemctl mask systemd-timesyncd.service
-
-###
-# Disable ipv6 forwarding
-###
-#grep -Els '^s*net.ipv6.conf.all.forwardings*=s*1' /etc/sysctl.conf /etc/sysctl.d/*.conf /usr/lib/sysctl.d/*.conf /run/sysctl.d/*.conf | while read filename; do sed -ri 's/^s*(net.ipv6.conf.all.forwardings*)(=)(s*S+b).*$/# *REMOVED* 1/' $filename; done; sysctl -w net.ipv6.conf.all.forwarding=0; sysctl -w net.ipv6.route.flush=1
-
-###
-# Set permissions for log files
-###
-find /var/log -type f -exec chmod g-wx,o-rwx '{}' + -o -type d -exec chmod g-w,o-rwx '{}' +
-
-###
-# Update sudoers file
-###
-cat << 'EOF' >> /etc/sudoers
-Defaults  use_pty
-Defaults  logfile=/var/log/sudo.log
-EOF
-
-# add empty group specified for use of su command.
-if [ ! "$(getent group sugroup)" ]; then
-  groupadd sugroup
+# Fail closed if legacy rules remain in active input fragments.
+if find /etc/audit/rules.d -maxdepth 1 -type f -name '*.rules' \
+  -print0 | xargs -0 grep -qs 'auid>=500'; then
+  echo "ERROR: active audit rule fragments still contain auid>=500." >&2
+  find /etc/audit/rules.d -maxdepth 1 -type f -name '*.rules' \
+    -print0 | xargs -0 grep -nH 'auid>=500' >&2
+  exit 1
 fi
 
 
-echo "---> Finished hardening process"
+
+###
+# Enable the daily patching timers now that all of our own apt work is done.
+# No `--now`: see the unattended-upgrades note above -- Persistent=true means
+# starting them here would trigger an immediate catch-up run. Enabling alone
+# is sufficient; they will fire on their OnCalendar schedule.
+###
+
+systemctl enable apt-daily.timer apt-daily-upgrade.timer
+
+###
+# AIDE database refresh. AIDE itself is installed/managed by the separate
+# aide-boshrelease (which is why the AIDE STIG rules are disabled in the
+# tailoring file); this only refreshes its database after usg fix has
+# changed files on disk, so the next integrity check is not all noise.
+###
+
 if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then
   echo "---> Updating AIDE db"
   set +e # aide returns non-zero on db changes
@@ -378,14 +270,4 @@ if [[ -f /var/vcap/jobs/aide/bin/update-aide-db ]]; then
   set -e
 fi
 
-# install and update cracklib to support the new pam_pwquality
-apt-get "${APT_CONFFILE_OPTS[@]}" install -y cracklib-runtime
-update-cracklib || true
-
-###
-# Continuous security-only patching, part 2: install unattended-upgrades and
-# enable its timers. Config dropped in earlier (51unattended-upgrades-security,
-# 20auto-upgrades) scopes it to the -security pocket only.
-###
-apt-get "${APT_CONFFILE_OPTS[@]}" install -y unattended-upgrades
-systemctl enable --now apt-daily.timer apt-daily-upgrade.timer
+echo "---> Hardening process finished"
